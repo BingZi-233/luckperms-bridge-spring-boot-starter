@@ -6,6 +6,11 @@
 
 LuckPerms Bridge Spring Boot Starter 是一个用于简化 LuckPerms API 集成的 Spring Boot Starter。它提供了一套简单的注解和配置方式，让你能够轻松地在 Spring Boot 项目中使用 LuckPerms 的功能。
 
+## 项目状态
+
+- [项目进度](PROGRESS.md) - 查看当前开发进度和计划
+- [更新日志](CHANGELOG.md) - 查看版本更新历史
+
 ## 特性
 
 - 🚀 开箱即用：最小化配置，快速集成
