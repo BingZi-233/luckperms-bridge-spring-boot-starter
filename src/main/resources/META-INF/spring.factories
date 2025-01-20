@@ -1,2 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-online.bingzi.luck.perms.bridge.spring.boot.starter.config.LuckPermsAutoConfiguration
