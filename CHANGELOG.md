@@ -72,13 +72,34 @@
 ### ⚠️ 破坏性变更
 - 无
 
-## [0.0.1] - 2024-03-xx
+## [0.0.1] - 2024-01-20
 
-### 重构
-- 重构了result包下的类结构,遵循单一职责原则(SRP)
-  - 拆分 `PlayerSaveResult.kt` 为 `PlayerSaveResult.kt` 和 `PlayerSaveResultOutcome.kt`
-  - 拆分 `PromotionResult.kt` 为 `PromotionResult.kt` 和 `PromotionStatus.kt` 
-  - 拆分 `DemotionResult.kt` 为 `DemotionResult.kt` 和 `DemotionStatus.kt`
+### 新增
+- 实现全部API接口
+  - 用户管理接口 (UserApi)
+  - 组管理接口 (GroupApi)
+  - 轨道管理接口 (TrackApi)
+  - 操作记录接口 (ActionApi)
+  - 消息服务接口 (MessagingApi)
+  - 事件订阅接口 (EventApi)
+  - 健康检查接口 (HealthApi)
+- 实现事件系统
+  - 事件监听器
+  - 事件管理器
+- 实现自动配置
+  - 配置属性类
+  - 自动配置类
+  - spring.factories配置
+
+### 优化
+- 规范化starter项目结构
+  - 移除非必要文件
+  - 优化自动配置
+  - 完善Bean配置
+- 完善注释和文档
+  - 添加中文注释
+  - 更新项目进度
+  - 更新更新日志
 
 ## 版本号说明
 
