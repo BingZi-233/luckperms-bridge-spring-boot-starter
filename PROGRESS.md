@@ -13,7 +13,7 @@
 
 ## 📝 详细进度
 
-### 1. 实体类系统 (11/11)
+### 1. 实体类系统 (12/12)
 - [x] Node - 权限节点实体
 - [x] NodeType - 节点类型枚举
 - [x] Context - 权限上下文实体
@@ -25,18 +25,22 @@
 - [x] ActionTarget - 操作目标实体
 - [x] ActionTargetType - 操作目标类型枚举
 - [x] Metadata - 元数据实体
+- [x] Result - 结果实体类(已完成SRP重构)
+  - [x] PlayerSaveResult/PlayerSaveResultOutcome
+  - [x] PromotionResult/PromotionStatus
+  - [x] DemotionResult/DemotionStatus
 
-### 2. API接口实现 (0/7)
-- [ ] 用户管理接口
-  - [ ] 获取所有用户
-  - [ ] 创建新用户
-  - [ ] 查询用户信息
-  - [ ] 更新用户信息
-  - [ ] 删除用户
-  - [ ] 权限检查
-  - [ ] 权限节点管理
-  - [ ] 元数据管理
-  - [ ] 晋升/降级操作
+### 2. API接口实现 (1/7)
+- [x] 用户管理接口
+  - [x] 获取所有用户
+  - [x] 创建新用户
+  - [x] 查询用户信息
+  - [x] 更新用户信息
+  - [x] 删除用户
+  - [x] 权限检查
+  - [x] 权限节点管理
+  - [x] 元数据管理
+  - [x] 晋升/降级操作
 - [ ] 组管理接口
   - [ ] 获取所有组
   - [ ] 创建新组
