@@ -4,6 +4,13 @@
 
 ## [1.0.2]
 
+### 新增
+- 添加 API 接口的自动配置
+  - 添加 `UserApi` Bean 配置
+  - 添加 `MessagingApi` Bean 配置
+  - 添加 `HealthApi` Bean 配置
+  - 所有 API Bean 都使用 `@ConditionalOnMissingBean` 注解，支持自定义覆盖
+
 ### 修复
 - 修复 `PreNetworkSyncEvent` 和 `PostNetworkSyncEvent` 中的属性命名冲突问题
   - 将 `type` 属性重命名为 `syncType`，以避免与 `LuckPermsEvent` 接口的 `getType()` 方法冲突

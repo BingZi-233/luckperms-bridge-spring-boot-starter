@@ -3,6 +3,9 @@ package online.bingzi.luck.perms.bridge.spring.boot.starter.config
 import com.fasterxml.jackson.databind.ObjectMapper
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import online.bingzi.luck.perms.bridge.spring.boot.starter.api.HealthApi
+import online.bingzi.luck.perms.bridge.spring.boot.starter.api.MessagingApi
+import online.bingzi.luck.perms.bridge.spring.boot.starter.api.UserApi
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.EnableConfigurationProperties
@@ -62,5 +65,32 @@ class LuckPermsAutoConfiguration(private val properties: LuckPermsProperties) {
             .client(okHttpClient)
             .addConverterFactory(JacksonConverterFactory.create(objectMapper))
             .build()
+    }
+
+    /**
+     * 配置UserApi
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    fun userApi(retrofit: Retrofit): UserApi {
+        return retrofit.create(UserApi::class.java)
+    }
+
+    /**
+     * 配置MessagingApi
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    fun messagingApi(retrofit: Retrofit): MessagingApi {
+        return retrofit.create(MessagingApi::class.java)
+    }
+
+    /**
+     * 配置HealthApi
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    fun healthApi(retrofit: Retrofit): HealthApi {
+        return retrofit.create(HealthApi::class.java)
     }
 } 
