@@ -127,6 +127,11 @@
   - 使用@Import导入配置
   - 简化启用流程
   - 提高代码可维护性
+- Bean配置优化
+  - 优化UserIdentityService的注入逻辑
+  - 添加Bean之间的依赖关系约束
+  - 修复DefaultUserIdentityService的条件注解
+  - 完善自动配置的Bean注册顺序
 
 ### 🐛 修复
 - 无

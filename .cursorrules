@@ -8,6 +8,7 @@
 - **模块化管理**，分解任务到最小单位，逐步解决复杂问题。
 - **PROGRESS.md和CHANGELOG.md**：每次调整代码后，更新项目进度和更新日志。
 - **Git提交规范**：每完成一个小任务，进行Git提交，遵循标准格式 `[版本号][模块][任务类型] 任务描述`。
+- Git提交前，**需要更新PROGRESS.md和CHANGELOG.md文件**。如果涉及**README.md**的内容，也要同时更新README.md。
 
 # 技术栈：
 - **框架**：Kotlin Spring Boot 3 + Gradle KTS + Kotlin 17

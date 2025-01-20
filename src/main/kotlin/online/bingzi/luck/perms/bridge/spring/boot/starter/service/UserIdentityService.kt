@@ -4,13 +4,12 @@ import java.util.UUID
 
 /**
  * 用户身份服务接口
- * 定义获取当前用户信息的抽象方法
+ * 用于获取当前请求的用户身份信息
  */
 interface UserIdentityService {
     /**
-     * 获取当前用户UUID
+     * 获取当前用户ID
      * @return 用户UUID
-     * @throws IllegalStateException 如果无法获取用户信息
      */
     fun getCurrentUserId(): UUID
 } 
