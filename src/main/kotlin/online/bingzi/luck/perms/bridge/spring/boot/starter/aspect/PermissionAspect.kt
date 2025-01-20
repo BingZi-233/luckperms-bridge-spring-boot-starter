@@ -1,7 +1,7 @@
 package online.bingzi.luck.perms.bridge.spring.boot.starter.aspect
 
 import online.bingzi.luck.perms.bridge.spring.boot.starter.annotation.RequirePermission
-import online.bingzi.luck.perms.bridge.spring.boot.starter.annotation.CheckMode
+import online.bingzi.luck.perms.bridge.spring.boot.starter.entity.CheckMode
 import online.bingzi.luck.perms.bridge.spring.boot.starter.exception.PermissionDeniedException
 import online.bingzi.luck.perms.bridge.spring.boot.starter.service.PermissionService
 import online.bingzi.luck.perms.bridge.spring.boot.starter.service.UserIdentityService
@@ -35,8 +35,8 @@ class PermissionAspect(
         // 获取当前用户ID
         val userId = userIdentityService.getCurrentUserId()
         
-        // 获取需要检查的权限列表
-        val permissions = annotation.value
+        // 获取需要检查的权限列表并转换为Array<String>
+        val permissions = annotation.value.toList().toTypedArray()
         
         // 检查权限
         val hasPermission = when (annotation.mode) {

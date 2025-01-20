@@ -1,7 +1,7 @@
 package online.bingzi.luck.perms.bridge.spring.boot.starter.aspect
 
 import online.bingzi.luck.perms.bridge.spring.boot.starter.annotation.RequireGroup
-import online.bingzi.luck.perms.bridge.spring.boot.starter.annotation.CheckMode
+import online.bingzi.luck.perms.bridge.spring.boot.starter.entity.CheckMode
 import online.bingzi.luck.perms.bridge.spring.boot.starter.exception.PermissionDeniedException
 import online.bingzi.luck.perms.bridge.spring.boot.starter.service.GroupService
 import online.bingzi.luck.perms.bridge.spring.boot.starter.service.UserIdentityService
@@ -35,8 +35,8 @@ class GroupAspect(
         // 获取当前用户ID
         val userId = userIdentityService.getCurrentUserId()
         
-        // 获取需要检查的组列表
-        val groups = annotation.value
+        // 获取需要检查的组列表并转换为Array<String>
+        val groups = annotation.value.toList().toTypedArray()
         
         // 检查组权限
         val hasPermission = when (annotation.mode) {

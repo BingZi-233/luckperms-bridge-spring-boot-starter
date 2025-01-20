@@ -1,8 +1,8 @@
 package online.bingzi.luck.perms.bridge.spring.boot.starter.aspect
 
 import online.bingzi.luck.perms.bridge.spring.boot.starter.annotation.WithContext
-import online.bingzi.luck.perms.bridge.spring.boot.starter.annotation.CheckMode
 import online.bingzi.luck.perms.bridge.spring.boot.starter.annotation.RequirePermission
+import online.bingzi.luck.perms.bridge.spring.boot.starter.entity.CheckMode
 import online.bingzi.luck.perms.bridge.spring.boot.starter.exception.PermissionDeniedException
 import online.bingzi.luck.perms.bridge.spring.boot.starter.service.ContextService
 import online.bingzi.luck.perms.bridge.spring.boot.starter.service.UserIdentityService
