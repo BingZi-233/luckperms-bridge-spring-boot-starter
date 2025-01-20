@@ -27,14 +27,14 @@ LuckPerms Bridge Spring Boot Starter 是一个用于简化 LuckPerms API 集成�
 <dependency>
     <groupId>online.bingzi</groupId>
     <artifactId>luckperms-bridge-spring-boot-starter</artifactId>
-    <version>${version}</version>
+    <version>1.0.0</version>
 </dependency>
 ```
 
 ### Gradle
 
 ```kotlin
-implementation("online.bingzi:luckperms-bridge-spring-boot-starter:${version}")
+implementation("online.bingzi:luckperms-bridge-spring-boot-starter:1.0.0")
 ```
 
 ### 基础配置
