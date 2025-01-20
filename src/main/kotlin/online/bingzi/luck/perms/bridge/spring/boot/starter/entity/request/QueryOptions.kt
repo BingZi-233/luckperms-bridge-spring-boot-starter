@@ -14,7 +14,7 @@ import online.bingzi.luck.perms.bridge.spring.boot.starter.entity.enums.QueryMod
 data class QueryOptions(
     val mode: QueryMode = QueryMode.CONTEXTUAL,
     val flags: Set<QueryFlag> = defaultFlags,
-    val contexts: List<Context>
+    val contexts: List<Context> = emptyList()
 ) {
     companion object {
         private val defaultFlags = setOf(

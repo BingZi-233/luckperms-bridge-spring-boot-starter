@@ -27,6 +27,7 @@
   - 实现 `hasAllPermissions` 和 `hasAnyPermission` 方法
   - 使用 `checkUserPermissionWithOptions` API 进行权限检查
   - 支持 `@RequirePermission` 注解的 ALL/ANY 模式
+  - 修复 `QueryOptions` 的 contexts 参数缺少默认值的问题
 
 ## [1.0.1]
 
