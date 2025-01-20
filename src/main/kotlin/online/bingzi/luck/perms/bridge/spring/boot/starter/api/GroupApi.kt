@@ -1,157 +1,171 @@
 package online.bingzi.luck.perms.bridge.spring.boot.starter.api
 
-import net.luckperms.api.LuckPerms
-import net.luckperms.api.node.Node
+import online.bingzi.luck.perms.bridge.spring.boot.starter.entity.Group
+import online.bingzi.luck.perms.bridge.spring.boot.starter.entity.Metadata
+import online.bingzi.luck.perms.bridge.spring.boot.starter.entity.Node
 import online.bingzi.luck.perms.bridge.spring.boot.starter.entity.request.NewGroup
-import online.bingzi.luck.perms.bridge.spring.boot.starter.entity.request.NewNode
 import online.bingzi.luck.perms.bridge.spring.boot.starter.entity.request.PermissionCheckRequest
+import online.bingzi.luck.perms.bridge.spring.boot.starter.entity.result.GroupSearchResult
 import online.bingzi.luck.perms.bridge.spring.boot.starter.entity.result.PermissionCheckResult
-import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
+import retrofit2.Call
+import retrofit2.http.*
 
-@RestController
-@RequestMapping("/group")
-class GroupApi(private val luckPerms: LuckPerms) {
-
+/**
+ * LuckPerms 组API接口
+ *
+ * 提供组管理相关的API操作，包括：
+ * - 组基本信息的CRUD
+ * - 组权限节点管理
+ * - 组元数据管理
+ * - 组权限检查
+ */
+interface GroupApi {
     /**
      * 获取所有组
+     *
+     * @return 组名称列表
      */
-    @GetMapping
-    fun getAllGroups(): ResponseEntity<List<String>> {
-        return try {
-            val groups = luckPerms.groupManager.loadedGroups.map { it.name }
-            ResponseEntity.ok(groups)
-        } catch (e: Exception) {
-            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-        }
-    }
+    @GET("group")
+    fun getGroups(): Call<List<String>>
 
     /**
      * 创建新组
+     *
+     * @param group 新组信息
+     * @return 创建的组信息
      */
-    @PostMapping
-    fun createGroup(@RequestBody newGroup: NewGroup): ResponseEntity<Any> {
-        return try {
-            val group = luckPerms.groupManager.createAndLoadGroup(newGroup.name)
-                ?: return ResponseEntity.status(HttpStatus.CONFLICT).build()
-            ResponseEntity.status(HttpStatus.CREATED).body(group)
-        } catch (e: Exception) {
-            ResponseEntity.status(HttpStatus.BAD_REQUEST).build()
-        }
-    }
+    @POST("group")
+    fun createGroup(@Body group: NewGroup): Call<Group>
+
+    /**
+     * 搜索具有指定节点的组
+     *
+     * @param key 精确匹配的节点键
+     * @param keyStartsWith 节点键前缀
+     * @param metaKey 元数据键
+     * @param type 节点类型
+     * @return 组搜索结果列表
+     */
+    @GET("group/search")
+    fun searchGroups(
+        @Query("key") key: String? = null,
+        @Query("keyStartsWith") keyStartsWith: String? = null,
+        @Query("metaKey") metaKey: String? = null,
+        @Query("type") type: String? = null
+    ): Call<List<GroupSearchResult>>
 
     /**
      * 获取指定组信息
+     *
+     * @param groupName 组名称
+     * @return 组信息
      */
-    @GetMapping("/{groupName}")
-    fun getGroup(@PathVariable groupName: String): ResponseEntity<Any> {
-        return try {
-            val group = luckPerms.groupManager.getGroup(groupName)
-                ?: return ResponseEntity.notFound().build()
-            ResponseEntity.ok(group)
-        } catch (e: Exception) {
-            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-        }
-    }
+    @GET("group/{groupName}")
+    fun getGroup(@Path("groupName") groupName: String): Call<Group>
 
     /**
-     * 删除指定组
+     * 删除组
+     *
+     * @param groupName 组名称
      */
-    @DeleteMapping("/{groupName}")
-    fun deleteGroup(@PathVariable groupName: String): ResponseEntity<Any> {
-        return try {
-            val group = luckPerms.groupManager.getGroup(groupName)
-                ?: return ResponseEntity.notFound().build()
-            luckPerms.groupManager.deleteGroup(group)
-            ResponseEntity.ok().build()
-        } catch (e: Exception) {
-            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-        }
-    }
+    @DELETE("group/{groupName}")
+    fun deleteGroup(@Path("groupName") groupName: String): Call<Unit>
 
     /**
-     * 获取组权限节点
+     * 获取组的权限节点
+     *
+     * @param groupName 组名称
+     * @return 权限节点列表
      */
-    @GetMapping("/{groupName}/nodes")
-    fun getGroupNodes(@PathVariable groupName: String): ResponseEntity<Collection<Node>> {
-        return try {
-            val group = luckPerms.groupManager.getGroup(groupName)
-                ?: return ResponseEntity.notFound().build()
-            ResponseEntity.ok(group.nodes)
-        } catch (e: Exception) {
-            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-        }
-    }
+    @GET("group/{groupName}/nodes")
+    fun getGroupNodes(@Path("groupName") groupName: String): Call<List<Node>>
 
     /**
-     * 添加组权限节点
+     * 添加权限节点到组
+     *
+     * @param groupName 组名称
+     * @param node 权限节点
+     * @param temporaryNodeMergeStrategy 临时节点合并策略
+     * @return 更新后的节点列表
      */
-    @PostMapping("/{groupName}/nodes")
+    @POST("group/{groupName}/nodes")
     fun addGroupNode(
-        @PathVariable groupName: String,
-        @RequestBody node: NewNode
-    ): ResponseEntity<Collection<Node>> {
-        return try {
-            val group = luckPerms.groupManager.getGroup(groupName)
-                ?: return ResponseEntity.notFound().build()
-            
-            val newNode = Node.builder(node.key)
-                .value(node.value)
-                .context(node.context ?: emptyList())
-                .expiry(node.expiry ?: 0)
-                .build()
-            
-            group.data().add(newNode)
-            luckPerms.groupManager.saveGroup(group)
-            
-            ResponseEntity.ok(group.nodes)
-        } catch (e: Exception) {
-            ResponseEntity.status(HttpStatus.BAD_REQUEST).build()
-        }
-    }
+        @Path("groupName") groupName: String,
+        @Body node: Node,
+        @Query("temporaryNodeMergeStrategy") temporaryNodeMergeStrategy: String? = null
+    ): Call<List<Node>>
 
     /**
-     * 检查组权限
+     * 批量添加权限节点到组
+     *
+     * @param groupName 组名称
+     * @param nodes 权限节点列表
+     * @param temporaryNodeMergeStrategy 临时节点合并策略
+     * @return 更新后的节点列表
      */
-    @GetMapping("/{groupName}/permission-check")
+    @PATCH("group/{groupName}/nodes")
+    fun addGroupNodes(
+        @Path("groupName") groupName: String,
+        @Body nodes: List<Node>,
+        @Query("temporaryNodeMergeStrategy") temporaryNodeMergeStrategy: String? = null
+    ): Call<List<Node>>
+
+    /**
+     * 设置组的权限节点(替换现有节点)
+     *
+     * @param groupName 组名称
+     * @param nodes 新的权限节点列表
+     */
+    @PUT("group/{groupName}/nodes")
+    fun setGroupNodes(
+        @Path("groupName") groupName: String,
+        @Body nodes: List<Node>
+    ): Call<Unit>
+
+    /**
+     * 删除组的权限节点
+     *
+     * @param groupName 组名称
+     * @param nodes 要删除的节点列表，为空则删除所有节点
+     */
+    @HTTP(method = "DELETE", path = "group/{groupName}/nodes", hasBody = true)
+    fun deleteGroupNodes(
+        @Path("groupName") groupName: String,
+        @Body nodes: List<Node>? = null
+    ): Call<Unit>
+
+    /**
+     * 获取组的元数据
+     *
+     * @param groupName 组名称
+     * @return 组元数据
+     */
+    @GET("group/{groupName}/meta")
+    fun getGroupMeta(@Path("groupName") groupName: String): Call<Metadata>
+
+    /**
+     * 检查组是否拥有指定权限
+     *
+     * @param groupName 组名称
+     * @param permission 权限节点
+     * @return 权限检查结果
+     */
+    @GET("group/{groupName}/permission-check")
     fun checkGroupPermission(
-        @PathVariable groupName: String,
-        @RequestParam permission: String
-    ): ResponseEntity<PermissionCheckResult> {
-        return try {
-            val group = luckPerms.groupManager.getGroup(groupName)
-                ?: return ResponseEntity.notFound().build()
-            
-            val result = group.cachedData.permissionData.checkPermission(permission)
-            ResponseEntity.ok(PermissionCheckResult(result.result().toString(), result.node()))
-        } catch (e: Exception) {
-            ResponseEntity.status(HttpStatus.BAD_REQUEST).build()
-        }
-    }
+        @Path("groupName") groupName: String,
+        @Query("permission") permission: String
+    ): Call<PermissionCheckResult>
 
     /**
      * 使用自定义查询选项检查组权限
+     *
+     * @param groupName 组名称
+     * @param request 权限检查请求
+     * @return 权限检查结果
      */
-    @PostMapping("/{groupName}/permission-check")
+    @POST("group/{groupName}/permission-check")
     fun checkGroupPermissionWithOptions(
-        @PathVariable groupName: String,
-        @RequestBody request: PermissionCheckRequest
-    ): ResponseEntity<PermissionCheckResult> {
-        return try {
-            val group = luckPerms.groupManager.getGroup(groupName)
-                ?: return ResponseEntity.notFound().build()
-            
-            val queryOptions = request.queryOptions?.toQueryOptions()
-            val result = if (queryOptions != null) {
-                group.cachedData.getPermissionData(queryOptions).checkPermission(request.permission)
-            } else {
-                group.cachedData.permissionData.checkPermission(request.permission)
-            }
-            
-            ResponseEntity.ok(PermissionCheckResult(result.result().toString(), result.node()))
-        } catch (e: Exception) {
-            ResponseEntity.status(HttpStatus.BAD_REQUEST).build()
-        }
-    }
+        @Path("groupName") groupName: String,
+        @Body request: PermissionCheckRequest
+    ): Call<PermissionCheckResult>
 } 

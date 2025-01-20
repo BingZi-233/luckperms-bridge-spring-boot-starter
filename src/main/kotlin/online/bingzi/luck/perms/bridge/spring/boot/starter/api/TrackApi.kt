@@ -1,96 +1,61 @@
 package online.bingzi.luck.perms.bridge.spring.boot.starter.api
 
-import net.luckperms.api.LuckPerms
+import online.bingzi.luck.perms.bridge.spring.boot.starter.entity.Track
 import online.bingzi.luck.perms.bridge.spring.boot.starter.entity.request.NewTrack
-import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
+import retrofit2.Call
+import retrofit2.http.*
 
 /**
- * 轨道管理接口
+ * LuckPerms 轨道API接口
+ *
+ * 提供轨道管理相关的API操作，包括：
+ * - 轨道基本信息的CRUD
+ * - 轨道组管理
  */
-@RestController
-@RequestMapping("/track")
-class TrackApi(private val luckPerms: LuckPerms) {
-
+interface TrackApi {
     /**
      * 获取所有轨道
+     *
+     * @return 轨道名称列表
      */
-    @GetMapping
-    fun getAllTracks(): ResponseEntity<List<String>> {
-        return try {
-            val tracks = luckPerms.trackManager.loadedTracks.map { it.name }
-            ResponseEntity.ok(tracks)
-        } catch (e: Exception) {
-            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-        }
-    }
+    @GET("track")
+    fun getTracks(): Call<List<String>>
 
     /**
      * 创建新轨道
+     *
+     * @param track 新轨道信息
+     * @return 创建的轨道信息
      */
-    @PostMapping
-    fun createTrack(@RequestBody newTrack: NewTrack): ResponseEntity<Any> {
-        return try {
-            val track = luckPerms.trackManager.createAndLoadTrack(newTrack.name)
-                ?: return ResponseEntity.status(HttpStatus.CONFLICT).build()
-            ResponseEntity.status(HttpStatus.CREATED).body(track)
-        } catch (e: Exception) {
-            ResponseEntity.status(HttpStatus.BAD_REQUEST).build()
-        }
-    }
+    @POST("track")
+    fun createTrack(@Body track: NewTrack): Call<Track>
 
     /**
      * 获取指定轨道信息
+     *
+     * @param trackName 轨道名称
+     * @return 轨道信息
      */
-    @GetMapping("/{trackName}")
-    fun getTrack(@PathVariable trackName: String): ResponseEntity<Any> {
-        return try {
-            val track = luckPerms.trackManager.getTrack(trackName)
-                ?: return ResponseEntity.notFound().build()
-            ResponseEntity.ok(track)
-        } catch (e: Exception) {
-            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-        }
-    }
+    @GET("track/{trackName}")
+    fun getTrack(@Path("trackName") trackName: String): Call<Track>
 
     /**
      * 更新轨道
+     *
+     * @param trackName 轨道名称
+     * @param groups 新的组列表
      */
-    @PatchMapping("/{trackName}")
+    @PATCH("track/{trackName}")
     fun updateTrack(
-        @PathVariable trackName: String,
-        @RequestBody groups: List<String>
-    ): ResponseEntity<Any> {
-        return try {
-            val track = luckPerms.trackManager.getTrack(trackName)
-                ?: return ResponseEntity.notFound().build()
-            
-            // 清除现有组
-            track.clearGroups()
-            // 添加新组
-            groups.forEach { track.appendGroup(it) }
-            
-            // 保存更改
-            luckPerms.trackManager.saveTrack(track)
-            ResponseEntity.ok().build()
-        } catch (e: Exception) {
-            ResponseEntity.status(HttpStatus.BAD_REQUEST).build()
-        }
-    }
+        @Path("trackName") trackName: String,
+        @Body groups: List<String>
+    ): Call<Unit>
 
     /**
      * 删除轨道
+     *
+     * @param trackName 轨道名称
      */
-    @DeleteMapping("/{trackName}")
-    fun deleteTrack(@PathVariable trackName: String): ResponseEntity<Any> {
-        return try {
-            val track = luckPerms.trackManager.getTrack(trackName)
-                ?: return ResponseEntity.notFound().build()
-            luckPerms.trackManager.deleteTrack(track)
-            ResponseEntity.ok().build()
-        } catch (e: Exception) {
-            ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
-        }
-    }
+    @DELETE("track/{trackName}")
+    fun deleteTrack(@Path("trackName") trackName: String): Call<Unit>
 } 
