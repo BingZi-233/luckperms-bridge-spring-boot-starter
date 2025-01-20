@@ -16,6 +16,12 @@
   - 将 `type` 属性重命名为 `syncType`，以避免与 `LuckPermsEvent` 接口的 `getType()` 方法冲突
   - 保持 JSON 序列化兼容性，继续使用 "type" 作为 JSON 字段名
 - 更新 `EventListener` 中的相关引用，使用新的属性名 `syncType`
+- 修复 Jackson 反序列化问题
+  - 为 `PermissionCheckResult` 添加 `@JsonCreator` 和 `@JsonProperty` 注解
+  - 为 `Node` 类添加 Jackson 序列化支持
+  - 为 `Context` 类添加 Jackson 序列化支持
+  - 为 `NodeType` 枚举添加 JSON 序列化和反序列化支持
+  - 优化枚举值的大小写处理
 
 ## [1.0.1]
 

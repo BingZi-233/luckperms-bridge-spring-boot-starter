@@ -1,5 +1,8 @@
 package online.bingzi.luck.perms.bridge.spring.boot.starter.entity
 
+import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonValue
+
 /**
  * 节点类型枚举
  *
@@ -21,5 +24,14 @@ enum class NodeType {
     SUFFIX,
     META,
     WEIGHT,
-    DISPLAY_NAME
+    DISPLAY_NAME;
+
+    @JsonValue
+    fun toValue(): String = name.lowercase()
+
+    companion object {
+        @JsonCreator
+        @JvmStatic
+        fun fromValue(value: String): NodeType = valueOf(value.uppercase())
+    }
 } 

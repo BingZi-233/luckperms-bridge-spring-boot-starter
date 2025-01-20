@@ -1,5 +1,7 @@
 package online.bingzi.luck.perms.bridge.spring.boot.starter.entity
 
+import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonProperty
 import jakarta.validation.constraints.Pattern
 
 /**
@@ -12,10 +14,12 @@ import jakarta.validation.constraints.Pattern
  * @property key 上下文键，只能包含小写字母和数字，例如"server"、"world"
  * @property value 上下文值，只能包含小写字母和数字，例如"survival"、"nether"
  */
-data class Context(
+data class Context @JsonCreator constructor(
+    @JsonProperty("key")
     @field:Pattern(regexp = "^[a-z0-9]+$")
     val key: String,
     
+    @JsonProperty("value")
     @field:Pattern(regexp = "^[a-z0-9]+$")
     val value: String
 ) 
