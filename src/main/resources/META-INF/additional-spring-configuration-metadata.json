@@ -1,0 +1,34 @@
+{
+  "properties": [
+    {
+      "name": "luck-perms.base-url",
+      "description": "LuckPerms API服务的基础URL。例如：http://your-server:8080",
+      "defaultValue": "http://localhost:8080"
+    },
+    {
+      "name": "luck-perms.api-key",
+      "description": "LuckPerms API密钥，用于API认证。可以在LuckPerms配置文件中找到。",
+      "defaultValue": ""
+    },
+    {
+      "name": "luck-perms.enabled",
+      "description": "是否启用LuckPerms Bridge。设置为false可以完全禁用所有功能。",
+      "defaultValue": true
+    }
+  ],
+  "hints": [
+    {
+      "name": "luck-perms.enabled",
+      "values": [
+        {
+          "value": true,
+          "description": "启用LuckPerms Bridge"
+        },
+        {
+          "value": false,
+          "description": "禁用LuckPerms Bridge"
+        }
+      ]
+    }
+  ]
+} 

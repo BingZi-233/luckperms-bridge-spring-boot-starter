@@ -1,0 +1,33 @@
+{
+  "groups": [
+    {
+      "name": "luck-perms",
+      "type": "online.bingzi.luck.perms.bridge.spring.boot.starter.config.LuckPermsProperties",
+      "sourceType": "online.bingzi.luck.perms.bridge.spring.boot.starter.config.LuckPermsProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "luck-perms.base-url",
+      "type": "java.lang.String",
+      "description": "LuckPerms API服务的基础URL",
+      "sourceType": "online.bingzi.luck.perms.bridge.spring.boot.starter.config.LuckPermsProperties",
+      "defaultValue": "http://localhost:8080"
+    },
+    {
+      "name": "luck-perms.api-key",
+      "type": "java.lang.String",
+      "description": "LuckPerms API密钥",
+      "sourceType": "online.bingzi.luck.perms.bridge.spring.boot.starter.config.LuckPermsProperties",
+      "defaultValue": ""
+    },
+    {
+      "name": "luck-perms.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用LuckPerms Bridge",
+      "sourceType": "online.bingzi.luck.perms.bridge.spring.boot.starter.config.LuckPermsProperties",
+      "defaultValue": true
+    }
+  ],
+  "hints": []
+} 
