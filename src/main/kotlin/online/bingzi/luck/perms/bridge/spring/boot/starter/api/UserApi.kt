@@ -1,6 +1,9 @@
 package online.bingzi.luck.perms.bridge.spring.boot.starter.api
 
 import online.bingzi.luck.perms.bridge.spring.boot.starter.entity.*
+import online.bingzi.luck.perms.bridge.spring.boot.starter.entity.request.PermissionCheckRequest
+import online.bingzi.luck.perms.bridge.spring.boot.starter.entity.request.TrackRequest
+import online.bingzi.luck.perms.bridge.spring.boot.starter.entity.result.*
 import retrofit2.Call
 import retrofit2.http.*
 
