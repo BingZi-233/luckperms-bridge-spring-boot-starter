@@ -1,5 +1,7 @@
 package online.bingzi.luck.perms.bridge.spring.boot.starter.annotation
 
+import online.bingzi.luck.perms.bridge.spring.boot.starter.entity.CheckMode
+
 /**
  * 组要求注解
  * 用于标注需要进行组权限检查的方法或类
@@ -16,13 +18,13 @@ annotation class RequireGroup(
      * 需要检查的组名列表
      */
     vararg val value: String,
-    
+
     /**
      * 组检查模式
      * @see CheckMode
      */
     val mode: CheckMode = CheckMode.ANY,
-    
+
     /**
      * 权限不足时的提示消息
      */

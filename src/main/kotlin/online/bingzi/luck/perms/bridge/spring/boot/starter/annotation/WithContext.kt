@@ -1,5 +1,7 @@
 package online.bingzi.luck.perms.bridge.spring.boot.starter.annotation
 
+import online.bingzi.luck.perms.bridge.spring.boot.starter.entity.CheckMode
+
 /**
  * 上下文要求注解
  * 用于指定权限检查时的上下文条件

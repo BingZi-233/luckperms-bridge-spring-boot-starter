@@ -1,6 +1,9 @@
 package online.bingzi.luck.perms.bridge.spring.boot.starter.service.impl
 
 import online.bingzi.luck.perms.bridge.spring.boot.starter.api.UserApi
+import online.bingzi.luck.perms.bridge.spring.boot.starter.entity.Context
+import online.bingzi.luck.perms.bridge.spring.boot.starter.entity.request.PermissionCheckRequest
+import online.bingzi.luck.perms.bridge.spring.boot.starter.entity.request.QueryOptions
 import online.bingzi.luck.perms.bridge.spring.boot.starter.service.ContextService
 import org.springframework.stereotype.Service
 import java.util.UUID
@@ -19,10 +22,15 @@ class LuckPermsContextService(
         contextKey: String,
         contextValue: String
     ): Boolean {
-        return userApi.checkPermissionInContext(
-            userId,
-            permission,
-            mapOf(contextKey to contextValue)
-        ).execute().body() ?: false
+        val request = PermissionCheckRequest(
+            permission = permission,
+            queryOptions = QueryOptions(
+                contexts = listOf(Context(key = contextKey, value = contextValue))
+            )
+        )
+        return userApi.checkUserPermissionWithOptions(userId.toString(), request)
+            .execute()
+            .body()
+            ?.result == "true"
     }
 } 

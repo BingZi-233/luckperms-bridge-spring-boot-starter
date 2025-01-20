@@ -14,6 +14,6 @@ class LuckPermsPermissionService(
 ) : PermissionService {
     
     override fun hasPermission(userId: UUID, permission: String): Boolean {
-        return userApi.checkPermission(userId, permission).execute().body() ?: false
+        return userApi.checkUserPermission(userId.toString(), permission).execute().body()?.result == "true"
     }
 } 
