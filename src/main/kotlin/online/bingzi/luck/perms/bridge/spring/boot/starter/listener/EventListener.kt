@@ -26,7 +26,6 @@ class EventListener : EventSourceListener() {
                 "post-network-sync" -> objectMapper.readValue(data, PostNetworkSyncEvent::class.java)
                 "pre-sync" -> objectMapper.readValue(data, PreSyncEvent::class.java)
                 "post-sync" -> objectMapper.readValue(data, PostSyncEvent::class.java)
-                "custom-message-receive" -> objectMapper.readValue(data, CustomMessageReceiveEvent::class.java)
                 else -> {
                     logger.warn("未知的事件类型: $type")
                     return
@@ -53,7 +52,6 @@ class EventListener : EventSourceListener() {
             is PostNetworkSyncEvent -> logger.info("收到网络同步后事件: syncId=${event.syncId}, type=${event.type}, didSyncOccur=${event.didSyncOccur}")
             is PreSyncEvent -> logger.info("收到同步前事件")
             is PostSyncEvent -> logger.info("收到同步后事件")
-            is CustomMessageReceiveEvent -> logger.info("收到自定义消息: ${event.message}")
         }
     }
 } 
