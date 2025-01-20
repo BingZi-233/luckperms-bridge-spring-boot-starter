@@ -6,10 +6,12 @@ import okhttp3.sse.EventSource
 import okhttp3.sse.EventSourceListener
 import online.bingzi.luck.perms.bridge.spring.boot.starter.event.*
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Component
 
 /**
  * LuckPerms事件监听器
  */
+@Component
 class EventListener : EventSourceListener() {
     private val logger = LoggerFactory.getLogger(EventListener::class.java)
     private val objectMapper = ObjectMapper()
@@ -48,10 +50,11 @@ class EventListener : EventSourceListener() {
     private fun handleEvent(event: LuckPermsEvent) {
         when (event) {
             is LogBroadcastEvent -> logger.info("收到日志广播: ${event.message}")
-            is PreNetworkSyncEvent -> logger.info("收到网络同步前事件: syncId=${event.syncId}, type=${event.type}")
-            is PostNetworkSyncEvent -> logger.info("收到网络同步后事件: syncId=${event.syncId}, type=${event.type}, didSyncOccur=${event.didSyncOccur}")
+            is PreNetworkSyncEvent -> logger.info("收到网络同步前事件: syncId=${event.syncId}, type=${event.syncType}")
+            is PostNetworkSyncEvent -> logger.info("收到网络同步后事件: syncId=${event.syncId}, type=${event.syncType}, didSyncOccur=${event.didSyncOccur}")
             is PreSyncEvent -> logger.info("收到同步前事件")
             is PostSyncEvent -> logger.info("收到同步后事件")
+            else -> logger.info("收到未知事件: ${event.getType()}")
         }
     }
 } 

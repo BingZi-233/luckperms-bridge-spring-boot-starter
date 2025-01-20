@@ -2,6 +2,14 @@
 
 本项目遵循 [语义化版本 2.0.0](https://semver.org/lang/zh-CN/) 规范。
 
+## [1.0.2]
+
+### 修复
+- 修复 `PreNetworkSyncEvent` 和 `PostNetworkSyncEvent` 中的属性命名冲突问题
+  - 将 `type` 属性重命名为 `syncType`，以避免与 `LuckPermsEvent` 接口的 `getType()` 方法冲突
+  - 保持 JSON 序列化兼容性，继续使用 "type" 作为 JSON 字段名
+- 更新 `EventListener` 中的相关引用，使用新的属性名 `syncType`
+
 ## [1.0.1]
 
 ### 新增

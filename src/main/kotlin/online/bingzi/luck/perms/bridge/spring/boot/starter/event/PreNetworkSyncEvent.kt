@@ -10,18 +10,18 @@ import java.util.UUID
  *
  * @property syncId 同步操作的唯一标识符
  *                 用于跟踪整个同步过程，确保同步操作的一致性
- * @property type 同步类型，可能的值：
+ * @property syncType 同步类型，可能的值：
  *              - "full": 完整同步，同步所有数据
  *              - "specific_user": 特定用户同步，仅同步指定用户的数据
  * @property specificUserUniqueId 特定用户的UUID
- *                              仅当type为"specific_user"时有效
+ *                              仅当syncType为"specific_user"时有效
  *                              指定要同步的用户ID
  */
 data class PreNetworkSyncEvent(
     @JsonProperty("syncId")
     val syncId: UUID,
     @JsonProperty("type")
-    val type: String,
+    val syncType: String,
     @JsonProperty("specificUserUniqueId")
     val specificUserUniqueId: UUID?
 ) : LuckPermsEvent {
