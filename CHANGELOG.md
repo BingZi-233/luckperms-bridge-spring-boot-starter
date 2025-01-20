@@ -20,6 +20,8 @@
   - 实现权限轨道实体(Track)
   - 实现操作记录相关实体(Action、ActionSource、ActionTarget、ActionTargetType)
   - 实现元数据实体(Metadata)
+- 选定技术栈
+  - 选用Retrofit2(2.11.0)作为HTTP客户端实现LuckPerms API调用
 
 ### 🔧 优化
 - 实体类系统优化
@@ -44,6 +46,14 @@
 
 ### ⚠️ 破坏性变更
 - 无
+
+## [0.0.1] - 2024-03-xx
+
+### 重构
+- 重构了result包下的类结构,遵循单一职责原则(SRP)
+  - 拆分 `PlayerSaveResult.kt` 为 `PlayerSaveResult.kt` 和 `PlayerSaveResultOutcome.kt`
+  - 拆分 `PromotionResult.kt` 为 `PromotionResult.kt` 和 `PromotionStatus.kt` 
+  - 拆分 `DemotionResult.kt` 为 `DemotionResult.kt` 和 `DemotionStatus.kt`
 
 ## 版本号说明
 
