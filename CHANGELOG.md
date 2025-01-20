@@ -22,6 +22,11 @@
   - 为 `Context` 类添加 Jackson 序列化支持
   - 为 `NodeType` 枚举添加 JSON 序列化和反序列化支持
   - 优化枚举值的大小写处理
+- 修复多权限检查问题
+  - 完善 `LuckPermsPermissionService` 的权限检查实现
+  - 实现 `hasAllPermissions` 和 `hasAnyPermission` 方法
+  - 使用 `checkUserPermissionWithOptions` API 进行权限检查
+  - 支持 `@RequirePermission` 注解的 ALL/ANY 模式
 
 ## [1.0.1]
 
