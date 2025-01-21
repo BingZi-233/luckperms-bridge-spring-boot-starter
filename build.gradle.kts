@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "online.bingzi"
-version = "1.0.2"
+version = "1.0.3"
 
 java {
     toolchain {
@@ -25,6 +25,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-aop")
+    implementation("org.springframework.retry:spring-retry")
     
     // Kotlin 支持
     implementation("org.jetbrains.kotlin:kotlin-reflect")

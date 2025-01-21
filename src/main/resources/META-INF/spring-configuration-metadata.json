@@ -9,6 +9,12 @@
       "name": "luck-perms.health-check",
       "type": "online.bingzi.luck.perms.bridge.spring.boot.starter.config.HealthCheckProperties",
       "sourceType": "online.bingzi.luck.perms.bridge.spring.boot.starter.config.HealthCheckProperties"
+    },
+    {
+      "name": "luck-perms.retry",
+      "type": "online.bingzi.luck.perms.bridge.spring.boot.starter.config.RetryProperties",
+      "sourceType": "online.bingzi.luck.perms.bridge.spring.boot.starter.config.RetryProperties",
+      "description": "重试配置，用于配置SSE连接失败时的重试策略"
     }
   ],
   "properties": [
@@ -53,23 +59,77 @@
       "description": "健康检查超时时间",
       "sourceType": "online.bingzi.luck.perms.bridge.spring.boot.starter.config.HealthCheckProperties",
       "defaultValue": "5s"
+    },
+    {
+      "name": "luck-perms.retry.initial-interval",
+      "type": "java.lang.Long",
+      "description": "初始重试间隔（毫秒）。首次失败后等待多长时间进行第一次重试。",
+      "sourceType": "online.bingzi.luck.perms.bridge.spring.boot.starter.config.RetryProperties",
+      "defaultValue": 1000
+    },
+    {
+      "name": "luck-perms.retry.multiplier",
+      "type": "java.lang.Double",
+      "description": "重试间隔倍数。每次重试失败后，下一次重试间隔相对于上一次的倍数。",
+      "sourceType": "online.bingzi.luck.perms.bridge.spring.boot.starter.config.RetryProperties",
+      "defaultValue": 2.0
+    },
+    {
+      "name": "luck-perms.retry.max-interval",
+      "type": "java.lang.Long",
+      "description": "最大重试间隔（毫秒）。重试间隔增长的上限，防止间隔时间过长。",
+      "sourceType": "online.bingzi.luck.perms.bridge.spring.boot.starter.config.RetryProperties",
+      "defaultValue": 30000
+    },
+    {
+      "name": "luck-perms.retry.max-attempts",
+      "type": "java.lang.Integer",
+      "description": "最大重试次数。达到此次数后将不再重试。",
+      "sourceType": "online.bingzi.luck.perms.bridge.spring.boot.starter.config.RetryProperties",
+      "defaultValue": 5
     }
   ],
   "hints": [
+    {
+      "name": "luck-perms.enabled",
+      "values": [
+        {
+          "value": true,
+          "description": "启用LuckPerms Bridge"
+        },
+        {
+          "value": false,
+          "description": "禁用LuckPerms Bridge"
+        }
+      ]
+    },
+    {
+      "name": "luck-perms.health-check.enabled",
+      "values": [
+        {
+          "value": true,
+          "description": "启用健康检查"
+        },
+        {
+          "value": false,
+          "description": "禁用健康检查"
+        }
+      ]
+    },
     {
       "name": "luck-perms.health-check.period",
       "values": [
         {
           "value": "10s",
-          "description": "10秒"
+          "description": "每10秒检查一次"
         },
         {
           "value": "30s",
-          "description": "30秒（默认）"
+          "description": "每30秒检查一次（推荐）"
         },
         {
           "value": "1m",
-          "description": "1分钟"
+          "description": "每1分钟检查一次"
         }
       ]
     },
@@ -78,15 +138,83 @@
       "values": [
         {
           "value": "3s",
-          "description": "3秒"
+          "description": "3秒超时（适用于本地服务）"
         },
         {
           "value": "5s",
-          "description": "5秒（默认）"
+          "description": "5秒超时（推荐）"
         },
         {
           "value": "10s",
-          "description": "10秒"
+          "description": "10秒超时（适用于网络不稳定场景）"
+        }
+      ]
+    },
+    {
+      "name": "luck-perms.retry.initial-interval",
+      "values": [
+        {
+          "value": 500,
+          "description": "500毫秒（适用于本地服务）"
+        },
+        {
+          "value": 1000,
+          "description": "1秒（推荐）"
+        },
+        {
+          "value": 2000,
+          "description": "2秒（适用于网络不稳定场景）"
+        }
+      ]
+    },
+    {
+      "name": "luck-perms.retry.multiplier",
+      "values": [
+        {
+          "value": 1.5,
+          "description": "1.5倍（温和增长）"
+        },
+        {
+          "value": 2.0,
+          "description": "2倍（推荐）"
+        },
+        {
+          "value": 3.0,
+          "description": "3倍（快速增长）"
+        }
+      ]
+    },
+    {
+      "name": "luck-perms.retry.max-interval",
+      "values": [
+        {
+          "value": 15000,
+          "description": "15秒（适用于对响应时间敏感的场景）"
+        },
+        {
+          "value": 30000,
+          "description": "30秒（推荐）"
+        },
+        {
+          "value": 60000,
+          "description": "60秒（适用于高容错场景）"
+        }
+      ]
+    },
+    {
+      "name": "luck-perms.retry.max-attempts",
+      "values": [
+        {
+          "value": 3,
+          "description": "3次（适用于快速失败场景）"
+        },
+        {
+          "value": 5,
+          "description": "5次（推荐）"
+        },
+        {
+          "value": 10,
+          "description": "10次（适用于高可用性要求场景）"
         }
       ]
     }

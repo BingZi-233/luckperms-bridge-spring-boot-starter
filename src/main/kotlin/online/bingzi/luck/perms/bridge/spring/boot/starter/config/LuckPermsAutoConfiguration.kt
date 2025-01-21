@@ -9,6 +9,8 @@ import online.bingzi.luck.perms.bridge.spring.boot.starter.api.UserApi
 import online.bingzi.luck.perms.bridge.spring.boot.starter.aspect.ContextAspect
 import online.bingzi.luck.perms.bridge.spring.boot.starter.aspect.GroupAspect
 import online.bingzi.luck.perms.bridge.spring.boot.starter.aspect.PermissionAspect
+import online.bingzi.luck.perms.bridge.spring.boot.starter.listener.EventListener
+import online.bingzi.luck.perms.bridge.spring.boot.starter.manager.EventManager
 import online.bingzi.luck.perms.bridge.spring.boot.starter.service.ContextService
 import online.bingzi.luck.perms.bridge.spring.boot.starter.service.GroupService
 import online.bingzi.luck.perms.bridge.spring.boot.starter.service.PermissionService
@@ -23,6 +25,10 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.EnableAspectJAutoProxy
+import org.springframework.retry.annotation.EnableRetry
+import org.springframework.retry.backoff.ExponentialBackOffPolicy
+import org.springframework.retry.policy.SimpleRetryPolicy
+import org.springframework.retry.support.RetryTemplate
 import retrofit2.Retrofit
 import retrofit2.converter.jackson.JacksonConverterFactory
 import java.util.concurrent.TimeUnit
@@ -32,9 +38,52 @@ import java.util.concurrent.TimeUnit
  */
 @Configuration
 @EnableAspectJAutoProxy
-@EnableConfigurationProperties(LuckPermsProperties::class)
+@EnableRetry
+@EnableConfigurationProperties(LuckPermsProperties::class, RetryProperties::class)
 @ConditionalOnProperty(prefix = "luck-perms", name = ["enabled"], havingValue = "true", matchIfMissing = true)
-class LuckPermsAutoConfiguration(private val properties: LuckPermsProperties) {
+class LuckPermsAutoConfiguration(
+    private val properties: LuckPermsProperties,
+    private val retryProperties: RetryProperties
+) {
+
+    /**
+     * 配置RetryTemplate
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    fun retryTemplate(): RetryTemplate {
+        return RetryTemplate().apply {
+            setBackOffPolicy(ExponentialBackOffPolicy().apply {
+                initialInterval = retryProperties.initialInterval
+                multiplier = retryProperties.multiplier
+                maxInterval = retryProperties.maxInterval
+            })
+            
+            setRetryPolicy(SimpleRetryPolicy().apply {
+                maxAttempts = retryProperties.maxAttempts
+            })
+        }
+    }
+
+    /**
+     * 配置EventManager
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    fun eventManager(retrofit: Retrofit, okHttpClient: OkHttpClient, retryTemplate: RetryTemplate): EventManager {
+        return EventManager(retrofit, okHttpClient, retryTemplate)
+    }
+
+    /**
+     * 配置EventListener
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    fun eventListener(eventManager: EventManager): EventListener {
+        val listener = EventListener(eventManager)
+        eventManager.setEventListener(listener)
+        return listener
+    }
 
     /**
      * 配置ObjectMapper

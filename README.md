@@ -109,6 +109,20 @@ fun main(args: Array<String>) {
     - 5s：默认值，适合大多数场景
     - 10s：适用于网络状况不稳定的环境
 
+### 重试配置
+```yaml
+luck-perms:
+  retry:
+    # 初始重试间隔（毫秒）
+    initial-interval: 1000
+    # 重试间隔倍数
+    multiplier: 2.0
+    # 最大重试间隔（毫秒）
+    max-interval: 30000
+    # 最大重试次数
+    max-attempts: 5
+```
+
 ### 配置最佳实践
 
 1. **环境隔离**

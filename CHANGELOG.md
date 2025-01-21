@@ -2,6 +2,25 @@
 
 本项目遵循 [语义化版本 2.0.0](https://semver.org/lang/zh-CN/) 规范。
 
+## [1.0.3] - 2024-01-xx
+
+### 新增
+- 添加基于Spring-Retry的SSE连接重试机制
+- 新增重试相关配置参数支持
+  - `luck-perms.retry.initial-interval`: 初始重试间隔
+  - `luck-perms.retry.multiplier`: 重试间隔倍数
+  - `luck-perms.retry.max-interval`: 最大重试间隔
+  - `luck-perms.retry.max-attempts`: 最大重试次数
+
+### 优化
+- 重构配置结构，统一到LuckPermsAutoConfiguration
+- 完善配置元数据，提供更好的IDE支持
+- 优化SSE连接的生命周期管理
+
+### 文档
+- 添加重试配置相关文档
+- 更新配置示例和最佳实践
+
 ## [1.0.2]
 
 ### 新增

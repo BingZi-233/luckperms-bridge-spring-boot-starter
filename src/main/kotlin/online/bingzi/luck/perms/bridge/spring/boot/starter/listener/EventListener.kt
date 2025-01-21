@@ -5,6 +5,7 @@ import okhttp3.Response
 import okhttp3.sse.EventSource
 import okhttp3.sse.EventSourceListener
 import online.bingzi.luck.perms.bridge.spring.boot.starter.event.*
+import online.bingzi.luck.perms.bridge.spring.boot.starter.manager.EventManager
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
@@ -12,7 +13,9 @@ import org.springframework.stereotype.Component
  * LuckPerms事件监听器
  */
 @Component
-class EventListener : EventSourceListener() {
+class EventListener(
+    private val eventManager: EventManager
+) : EventSourceListener() {
     private val logger = LoggerFactory.getLogger(EventListener::class.java)
     private val objectMapper = ObjectMapper()
 
@@ -40,11 +43,13 @@ class EventListener : EventSourceListener() {
     }
 
     override fun onClosed(eventSource: EventSource) {
-        logger.info("SSE连接已关闭")
+        logger.info("SSE连接已关闭，尝试重新连接")
+        eventManager.handleConnectionFailure(eventSource)
     }
 
     override fun onFailure(eventSource: EventSource, t: Throwable?, response: Response?) {
-        logger.error("SSE连接失败", t)
+        logger.error("SSE连接失败，尝试重新连接", t)
+        eventManager.handleConnectionFailure(eventSource)
     }
 
     private fun handleEvent(event: LuckPermsEvent) {
