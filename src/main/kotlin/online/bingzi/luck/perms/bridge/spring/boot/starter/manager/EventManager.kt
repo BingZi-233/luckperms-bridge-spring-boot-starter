@@ -5,7 +5,6 @@ import okhttp3.Request
 import okhttp3.sse.EventSource
 import okhttp3.sse.EventSources
 import online.bingzi.luck.perms.bridge.spring.boot.starter.api.EventApi
-import online.bingzi.luck.perms.bridge.spring.boot.starter.event.bus.EventBus
 import online.bingzi.luck.perms.bridge.spring.boot.starter.listener.EventSourceFactory
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.DisposableBean
@@ -24,7 +23,6 @@ class EventManager(
     private val retrofit: Retrofit,
     private val okHttpClient: OkHttpClient,
     private val retryTemplate: RetryTemplate,
-    private val eventBus: EventBus,
     private val eventSourceFactory: EventSourceFactory
 ) : InitializingBean, DisposableBean {
 
@@ -45,7 +43,6 @@ class EventManager(
     override fun destroy() {
         eventSources.values.forEach { it.cancel() }
         eventSources.clear()
-        eventBus.clearHandlers()
     }
 
     /**
@@ -78,7 +75,7 @@ class EventManager(
         retryTemplate.execute<Unit, Exception> { context ->
             try {
                 val eventSource = EventSources.createFactory(okHttpClient)
-                    .newEventSource(request, eventSourceFactory.createListener(eventBus))
+                    .newEventSource(request, eventSourceFactory.createListener())
                 eventSources[request] = eventSource
                 logger.info("已成功订阅事件: ${request.url}, 重试次数: ${context.retryCount}")
             } catch (e: Exception) {

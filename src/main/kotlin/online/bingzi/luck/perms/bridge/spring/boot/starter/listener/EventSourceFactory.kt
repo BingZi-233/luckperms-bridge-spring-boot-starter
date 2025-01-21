@@ -4,9 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import okhttp3.Response
 import okhttp3.sse.EventSource
 import okhttp3.sse.EventSourceListener
-import online.bingzi.luck.perms.bridge.spring.boot.starter.event.bus.EventBus
 import online.bingzi.luck.perms.bridge.spring.boot.starter.event.model.*
 import org.slf4j.LoggerFactory
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Component
 
 /**
@@ -14,16 +14,18 @@ import org.springframework.stereotype.Component
  * 负责创建事件监听器
  */
 @Component
-class EventSourceFactory(private val objectMapper: ObjectMapper) {
+class EventSourceFactory(
+    private val objectMapper: ObjectMapper,
+    private val eventPublisher: ApplicationEventPublisher
+) {
 
     private val logger = LoggerFactory.getLogger(EventSourceFactory::class.java)
 
     /**
      * 创建事件监听器
-     * @param eventBus 事件总线
      * @return 事件监听器
      */
-    fun createListener(eventBus: EventBus): EventSourceListener {
+    fun createListener(): EventSourceListener {
         return object : EventSourceListener() {
             override fun onOpen(eventSource: EventSource, response: Response) {
                 logger.info("SSE连接已建立")
@@ -32,18 +34,30 @@ class EventSourceFactory(private val objectMapper: ObjectMapper) {
             override fun onEvent(eventSource: EventSource, id: String?, type: String?, data: String) {
                 try {
                     val event = when (type) {
-                        "log-broadcast" -> objectMapper.readValue(data, LogBroadcastEvent::class.java)
-                        "pre-network-sync" -> objectMapper.readValue(data, PreNetworkSyncEvent::class.java)
-                        "post-network-sync" -> objectMapper.readValue(data, PostNetworkSyncEvent::class.java)
-                        "pre-sync" -> objectMapper.readValue(data, PreSyncEvent::class.java)
-                        "post-sync" -> objectMapper.readValue(data, PostSyncEvent::class.java)
-                        "custom-message" -> objectMapper.readValue(data, CustomMessageEvent::class.java)
+                        "log-broadcast" -> objectMapper.readValue(data, Map::class.java).let {
+                            LogBroadcastEvent(this, it["message"] as String, it["source"] as String)
+                        }
+                        "pre-network-sync" -> objectMapper.readValue(data, Map::class.java).let {
+                            PreNetworkSyncEvent(this, it["syncId"] as String, it["type"] as String)
+                        }
+                        "post-network-sync" -> objectMapper.readValue(data, Map::class.java).let {
+                            PostNetworkSyncEvent(this, it["syncId"] as String, it["type"] as String, it["didSyncOccur"] as Boolean)
+                        }
+                        "pre-sync" -> objectMapper.readValue(data, Map::class.java).let {
+                            PreSyncEvent(this, it["cause"] as String)
+                        }
+                        "post-sync" -> objectMapper.readValue(data, Map::class.java).let {
+                            PostSyncEvent(this, it["cause"] as String, it["didSyncOccur"] as Boolean)
+                        }
+                        "custom-message" -> objectMapper.readValue(data, Map::class.java).let {
+                            CustomMessageEvent(this, it["channel"] as String, it["message"] as String)
+                        }
                         else -> {
                             logger.warn("未知的事件类型: $type")
                             return
                         }
                     }
-                    eventBus.publishEvent(event)
+                    eventPublisher.publishEvent(event)
                 } catch (e: Exception) {
                     logger.error("处理事件时发生错误", e)
                 }

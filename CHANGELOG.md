@@ -227,6 +227,22 @@ luck-perms:
     timeout: PT5S               # 超时时间（5秒）
 ```
 
+## [0.0.3] - 事件系统Spring集成
+
+### 变更
+- 重构事件系统，使用Spring的事件机制
+  - 事件类继承自 `ApplicationEvent`
+  - 使用 `ApplicationEventPublisher` 发布事件
+  - 使用 `@EventListener` 注解监听事件
+- 优化事件处理流程
+  - 移除自定义事件总线
+  - 移除自定义事件处理器
+  - 简化事件发布和监听方式
+
+### 移除
+- 移除 `EventBus` 类，使用Spring的事件发布机制
+- 移除 `EventHandler` 接口，使用Spring的事件监听机制
+
 ## [0.0.2] - 事件系统优化
 
 ### 优化

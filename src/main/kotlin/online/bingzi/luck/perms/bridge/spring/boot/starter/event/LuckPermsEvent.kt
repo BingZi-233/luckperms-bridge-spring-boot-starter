@@ -1,31 +1,19 @@
 package online.bingzi.luck.perms.bridge.spring.boot.starter.event
 
+import org.springframework.context.ApplicationEvent
 import java.time.Instant
 
 /**
- * LuckPerms事件基础接口
- * 所有LuckPerms事件都必须实现此接口
+ * LuckPerms事件基础类
+ * 所有LuckPerms事件都必须继承此类
  */
-interface LuckPermsEvent {
-    /**
-     * 事件唯一标识符
-     */
-    val eventId: String
-
-    /**
-     * 事件发生时间
-     */
-    val timestamp: Instant
-
-    /**
-     * 事件类型
-     */
-    val eventType: EventType
-
-    /**
-     * 事件优先级
-     */
-    val priority: EventPriority
+abstract class LuckPermsEvent(
+    source: Any,
+    val eventType: EventType,
+    val priority: EventPriority = EventPriority.NORMAL
+) : ApplicationEvent(source) {
+    val eventId: String = java.util.UUID.randomUUID().toString()
+    val timestamp: Instant = Instant.now()
 }
 
 /**
@@ -49,15 +37,4 @@ enum class EventPriority {
     NORMAL,
     HIGH,
     HIGHEST
-}
-
-/**
- * 事件基础抽象类
- */
-abstract class AbstractLuckPermsEvent(
-    override val eventType: EventType,
-    override val priority: EventPriority = EventPriority.NORMAL
-) : LuckPermsEvent {
-    override val eventId: String = java.util.UUID.randomUUID().toString()
-    override val timestamp: Instant = Instant.now()
 } 
