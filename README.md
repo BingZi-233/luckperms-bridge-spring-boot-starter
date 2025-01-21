@@ -140,6 +140,8 @@ fun main(args: Array<String>) {
 
 ## 注解使用
 
+> 🔍 查看 [完整注解使用示例](ANNOTATIONS.md) 了解更多详细用法和最佳实践。
+
 ### @RequirePermission
 
 用于方法级别的权限检查：
