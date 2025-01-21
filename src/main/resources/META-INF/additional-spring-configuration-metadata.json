@@ -14,6 +14,21 @@
       "name": "luck-perms.enabled",
       "description": "是否启用LuckPerms Bridge。设置为false可以完全禁用所有功能。",
       "defaultValue": true
+    },
+    {
+      "name": "luck-perms.health-check.enabled",
+      "description": "是否启用健康检查功能。启用后将定期检查LuckPerms API的可用性。",
+      "defaultValue": true
+    },
+    {
+      "name": "luck-perms.health-check.period",
+      "description": "健康检查执行周期。指定多久执行一次健康检查，支持时间单位：s（秒）、m（分钟）、h（小时）等。",
+      "defaultValue": "30s"
+    },
+    {
+      "name": "luck-perms.health-check.timeout",
+      "description": "健康检查超时时间。单次检查的最大等待时间，超过此时间视为检查失败。",
+      "defaultValue": "5s"
     }
   ],
   "hints": [
@@ -27,6 +42,57 @@
         {
           "value": false,
           "description": "禁用LuckPerms Bridge"
+        }
+      ]
+    },
+    {
+      "name": "luck-perms.health-check.enabled",
+      "values": [
+        {
+          "value": true,
+          "description": "启用健康检查"
+        },
+        {
+          "value": false,
+          "description": "禁用健康检查"
+        }
+      ]
+    },
+    {
+      "name": "luck-perms.health-check.period",
+      "values": [
+        {
+          "value": "10s",
+          "description": "每10秒检查一次"
+        },
+        {
+          "value": "30s",
+          "description": "每30秒检查一次（推荐）"
+        },
+        {
+          "value": "1m",
+          "description": "每1分钟检查一次"
+        },
+        {
+          "value": "5m",
+          "description": "每5分钟检查一次"
+        }
+      ]
+    },
+    {
+      "name": "luck-perms.health-check.timeout",
+      "values": [
+        {
+          "value": "3s",
+          "description": "3秒超时（适用于本地服务）"
+        },
+        {
+          "value": "5s",
+          "description": "5秒超时（推荐）"
+        },
+        {
+          "value": "10s",
+          "description": "10秒超时（适用于网络不稳定场景）"
         }
       ]
     }

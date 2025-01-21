@@ -4,6 +4,11 @@
       "name": "luck-perms",
       "type": "online.bingzi.luck.perms.bridge.spring.boot.starter.config.LuckPermsProperties",
       "sourceType": "online.bingzi.luck.perms.bridge.spring.boot.starter.config.LuckPermsProperties"
+    },
+    {
+      "name": "luck-perms.health-check",
+      "type": "online.bingzi.luck.perms.bridge.spring.boot.starter.config.HealthCheckProperties",
+      "sourceType": "online.bingzi.luck.perms.bridge.spring.boot.starter.config.HealthCheckProperties"
     }
   ],
   "properties": [
@@ -27,7 +32,63 @@
       "description": "是否启用LuckPerms Bridge",
       "sourceType": "online.bingzi.luck.perms.bridge.spring.boot.starter.config.LuckPermsProperties",
       "defaultValue": true
+    },
+    {
+      "name": "luck-perms.health-check.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用健康检查功能",
+      "sourceType": "online.bingzi.luck.perms.bridge.spring.boot.starter.config.HealthCheckProperties",
+      "defaultValue": true
+    },
+    {
+      "name": "luck-perms.health-check.period",
+      "type": "java.time.Duration",
+      "description": "健康检查执行周期",
+      "sourceType": "online.bingzi.luck.perms.bridge.spring.boot.starter.config.HealthCheckProperties",
+      "defaultValue": "30s"
+    },
+    {
+      "name": "luck-perms.health-check.timeout",
+      "type": "java.time.Duration",
+      "description": "健康检查超时时间",
+      "sourceType": "online.bingzi.luck.perms.bridge.spring.boot.starter.config.HealthCheckProperties",
+      "defaultValue": "5s"
     }
   ],
-  "hints": []
+  "hints": [
+    {
+      "name": "luck-perms.health-check.period",
+      "values": [
+        {
+          "value": "10s",
+          "description": "10秒"
+        },
+        {
+          "value": "30s",
+          "description": "30秒（默认）"
+        },
+        {
+          "value": "1m",
+          "description": "1分钟"
+        }
+      ]
+    },
+    {
+      "name": "luck-perms.health-check.timeout",
+      "values": [
+        {
+          "value": "3s",
+          "description": "3秒"
+        },
+        {
+          "value": "5s",
+          "description": "5秒（默认）"
+        },
+        {
+          "value": "10s",
+          "description": "10秒"
+        }
+      ]
+    }
+  ]
 } 
