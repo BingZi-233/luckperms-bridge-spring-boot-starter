@@ -149,6 +149,60 @@ fun kickPlayer(player: String) {
 }
 ```
 
+## 自定义用户身份识别
+
+默认情况下，starter 提供了两种用户身份识别实现：
+1. `DefaultUserIdentityService`: 使用 Spring Security 的 Principal 获取用户身份
+2. `HeaderUserIdentityService`: 从请求头中获取用户身份
+
+如果这两种实现不满足您的需求，您可以自定义实现 `UserIdentityService` 接口：
+
+```kotlin
+@Service
+class CustomUserIdentityService : UserIdentityService {
+    override fun getUserIdentity(): String {
+        // 示例：从ThreadLocal中获取用户身份
+        return UserContext.getCurrentUser()
+            ?: throw UnauthorizedException("用户未登录")
+    }
+}
+```
+
+或者使用 JWT Token 进行身份识别：
+
+```kotlin
+@Service
+class JwtUserIdentityService(
+    private val jwtUtil: JwtUtil
+) : UserIdentityService {
+    override fun getUserIdentity(): String {
+        val request = RequestContextHolder.currentRequestAttributes() as ServletRequestAttributes
+        val token = request.request.getHeader("Authorization")
+            ?.removePrefix("Bearer ")
+            ?: throw UnauthorizedException("未提供Token")
+            
+        return jwtUtil.extractUsername(token)
+            ?: throw UnauthorizedException("无效的Token")
+    }
+}
+```
+
+自定义实现类需要注册为 Spring Bean，starter 会自动使用您的实现替代默认实现。您也可以使用条件注解来控制实现类的启用条件：
+
+```kotlin
+@Service
+@ConditionalOnProperty(name = ["app.auth.type"], havingValue = "jwt")
+class JwtUserIdentityService(/*...*/) : UserIdentityService {
+    // ...
+}
+
+@Service
+@ConditionalOnProperty(name = ["app.auth.type"], havingValue = "session")
+class SessionUserIdentityService(/*...*/) : UserIdentityService {
+    // ...
+}
+```
+
 ## 常见问题
 
 1. **配置未生效？**
