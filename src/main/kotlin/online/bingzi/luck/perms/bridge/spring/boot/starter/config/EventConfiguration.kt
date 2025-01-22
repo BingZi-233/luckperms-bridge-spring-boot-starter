@@ -2,6 +2,7 @@ package online.bingzi.luck.perms.bridge.spring.boot.starter.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import okhttp3.OkHttpClient
+import online.bingzi.luck.perms.bridge.spring.boot.starter.listener.ConnectionStateHandler
 import online.bingzi.luck.perms.bridge.spring.boot.starter.listener.EventSourceFactory
 import online.bingzi.luck.perms.bridge.spring.boot.starter.manager.EventManager
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -25,9 +26,10 @@ class EventConfiguration {
     @ConditionalOnMissingBean
     fun eventSourceFactory(
         objectMapper: ObjectMapper,
-        eventPublisher: ApplicationEventPublisher
+        eventPublisher: ApplicationEventPublisher,
+        connectionStateHandler: ConnectionStateHandler
     ): EventSourceFactory {
-        return EventSourceFactory(objectMapper, eventPublisher)
+        return EventSourceFactory(objectMapper, eventPublisher, connectionStateHandler)
     }
 
     /**

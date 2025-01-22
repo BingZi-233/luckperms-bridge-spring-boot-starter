@@ -6,6 +6,7 @@ import online.bingzi.luck.perms.bridge.spring.boot.starter.event.model.Connectio
 import online.bingzi.luck.perms.bridge.spring.boot.starter.event.model.state.ConnectionState
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationEventPublisher
+import org.springframework.stereotype.Component
 
 /**
  * SSE连接状态处理器
@@ -18,6 +19,7 @@ import org.springframework.context.ApplicationEventPublisher
  *
  * @property eventPublisher Spring的事件发布器，用于发布连接状态事件
  */
+@Component
 class ConnectionStateHandler(
     private val eventPublisher: ApplicationEventPublisher
 ) {

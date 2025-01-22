@@ -22,10 +22,10 @@ import org.springframework.context.ApplicationEventPublisher
  */
 class EventSourceFactory(
     private val objectMapper: ObjectMapper,
-    private val eventPublisher: ApplicationEventPublisher
+    private val eventPublisher: ApplicationEventPublisher,
+    private val connectionStateHandler: ConnectionStateHandler
 ) {
     private val logger = LoggerFactory.getLogger(EventSourceFactory::class.java)
-    private val connectionStateHandler = ConnectionStateHandler(eventPublisher)
 
     /**
      * 创建SSE事件监听器
