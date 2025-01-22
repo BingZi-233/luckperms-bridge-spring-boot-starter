@@ -27,7 +27,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
-import org.springframework.context.annotation.Conditional
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.EnableAspectJAutoProxy
 import org.springframework.context.annotation.Import
@@ -53,9 +52,7 @@ import java.util.concurrent.TimeUnit
     prefix = "luck-perms",
     name = ["enabled"],
     havingValue = "true",
-    matchIfMissing = true,
-    // 当存在 @EnableLuckPermsBridge 注解时，此条件不生效
-    havingAnnotation = "!${EnableLuckPermsBridge::class.qualifiedName}"
+    matchIfMissing = true
 )
 class LuckPermsAutoConfiguration(
     private val properties: LuckPermsProperties,

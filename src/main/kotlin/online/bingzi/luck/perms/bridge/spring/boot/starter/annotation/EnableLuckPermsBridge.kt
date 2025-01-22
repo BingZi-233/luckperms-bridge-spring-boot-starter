@@ -1,6 +1,7 @@
 package online.bingzi.luck.perms.bridge.spring.boot.starter.annotation
 
 import online.bingzi.luck.perms.bridge.spring.boot.starter.config.LuckPermsAutoConfiguration
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration
 import org.springframework.context.annotation.Import
 
 /**
@@ -20,5 +21,5 @@ import org.springframework.context.annotation.Import
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
 @MustBeDocumented
-@Import(LuckPermsAutoConfiguration::class)
+@ImportAutoConfiguration(LuckPermsAutoConfiguration::class)
 annotation class EnableLuckPermsBridge 

@@ -2,6 +2,15 @@
 
 本项目遵循 [语义化版本 2.0.0](https://semver.org/lang/zh-CN/) 规范。
 
+## [1.0.13]
+
+### 修复
+- 修复了 `@EnableLuckPermsBridge` 注解的实现问题
+  - 使用 `@ImportAutoConfiguration` 替代 `@Import`
+  - 移除了无效的条件判断
+  - 优化了自动配置的导入方式
+  - 修复了与配置属性的冲突问题
+
 ## [1.0.12]
 
 ### 优化
