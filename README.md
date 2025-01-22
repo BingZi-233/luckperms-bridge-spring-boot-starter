@@ -18,6 +18,9 @@ LuckPerms Bridge Spring Boot Starter 是一个用于简化 LuckPerms API 集成�
 - 🔌 自动配置：自动配置所需的Bean和服务
 - 🛠 完整API：支持所有LuckPerms REST API功能
 - 📦 轻量级：最小化依赖，不引入额外负担
+- 🔄 事件系统：支持实时权限变更事件监听
+- ❤️ 健康检查：自动监控LuckPerms服务状态
+- 🔁 重试机制：内置智能重试，提高系统稳定性
 
 ## 快速开始
 
@@ -27,14 +30,14 @@ LuckPerms Bridge Spring Boot Starter 是一个用于简化 LuckPerms API 集成�
 <dependency>
     <groupId>online.bingzi</groupId>
     <artifactId>luckperms-bridge-spring-boot-starter</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.16</version>
 </dependency>
 ```
 
 ### Gradle
 
 ```kotlin
-implementation("online.bingzi:luckperms-bridge-spring-boot-starter:1.0.0")
+implementation("online.bingzi:luckperms-bridge-spring-boot-starter:1.0.16")
 ```
 
 ### 基础配置
@@ -46,6 +49,19 @@ luck-perms:
   base-url: http://your-luckperms-server:8080  # LuckPerms API服务地址
   api-key: your-api-key                        # LuckPerms API密钥
   enabled: true                                # 是否启用（可选，默认true）
+  
+  # 健康检查配置（可选）
+  health-check:
+    enabled: true                              # 是否启用健康检查
+    period: 30s                                # 检查周期
+    timeout: 5s                                # 检查超时时间
+    
+  # 重试配置（可选）
+  retry:
+    initial-interval: 1000                     # 初始重试间隔（毫秒）
+    multiplier: 2.0                            # 重试间隔倍数
+    max-interval: 30000                        # 最大重试间隔（毫秒）
+    max-attempts: 5                            # 最大重试次数
 ```
 
 ### 启用Starter
@@ -109,18 +125,26 @@ fun main(args: Array<String>) {
     - 10s：适用于网络状况不稳定的环境
 
 ### 重试配置
-```yaml
-luck-perms:
-  retry:
-    # 初始重试间隔（毫秒）
-    initial-interval: 1000
-    # 重试间隔倍数
-    multiplier: 2.0
-    # 最大重试间隔（毫秒）
-    max-interval: 30000
-    # 最大重试次数
-    max-attempts: 5
-```
+
+- `luck-perms.retry.initial-interval`: 初始重试间隔（毫秒）
+  - 类型：Integer
+  - 默认值：1000
+  - 说明：第一次重试之前的等待时间
+
+- `luck-perms.retry.multiplier`: 重试间隔倍数
+  - 类型：Double
+  - 默认值：2.0
+  - 说明：每次重试之间的等待时间倍数
+
+- `luck-perms.retry.max-interval`: 最大重试间隔（毫秒）
+  - 类型：Integer
+  - 默认值：30000
+  - 说明：重试的最大等待时间
+
+- `luck-perms.retry.max-attempts`: 最大重试次数
+  - 类型：Integer
+  - 默认值：5
+  - 说明：重试的最大次数
 
 ### 配置最佳实践
 
