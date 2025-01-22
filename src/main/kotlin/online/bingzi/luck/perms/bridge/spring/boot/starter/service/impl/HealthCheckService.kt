@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 
 @Service
 class HealthCheckService(
@@ -16,9 +17,9 @@ class HealthCheckService(
     private val healthCheckProperties: HealthCheckProperties
 ) {
     private val log = LoggerFactory.getLogger(this::class.java)
-    private val healthStatus = HealthStatus()
+    private val healthStatus = AtomicReference(HealthStatus())
 
-    @Scheduled(fixedDelayString = "#{@healthCheckProperties.period.toMillis()}")
+    @Scheduled(fixedDelayString = "\${luck-perms.health-check.period:30000}")
     fun checkHealth() {
         if (!healthCheckProperties.enabled) {
             return
@@ -45,31 +46,35 @@ class HealthCheckService(
     }
 
     private fun updateHealthyStatus(responseTime: Long) {
-        healthStatus.apply {
-            isHealthy = true
-            lastCheckTime = LocalDateTime.now()
-            lastResponseTime = responseTime
-            consecutiveFailures = 0
-            if (lastFailureTime != null) {
-                downtime += ChronoUnit.MILLIS.between(lastFailureTime, LocalDateTime.now())
+        healthStatus.updateAndGet { currentStatus ->
+            currentStatus.copy(
+                isHealthy = true,
+                lastCheckTime = LocalDateTime.now(),
+                lastResponseTime = responseTime,
+                consecutiveFailures = 0,
+                downtime = if (currentStatus.lastFailureTime != null) {
+                    currentStatus.downtime + ChronoUnit.MILLIS.between(currentStatus.lastFailureTime, LocalDateTime.now())
+                } else {
+                    currentStatus.downtime
+                },
                 lastFailureTime = null
-            }
+            )
         }
     }
 
     private fun updateUnhealthyStatus() {
-        healthStatus.apply {
-            isHealthy = false
-            lastCheckTime = LocalDateTime.now()
-            consecutiveFailures++
-            if (lastFailureTime == null) {
-                lastFailureTime = LocalDateTime.now()
-            }
+        healthStatus.updateAndGet { currentStatus ->
+            currentStatus.copy(
+                isHealthy = false,
+                lastCheckTime = LocalDateTime.now(),
+                consecutiveFailures = currentStatus.consecutiveFailures + 1,
+                lastFailureTime = currentStatus.lastFailureTime ?: LocalDateTime.now()
+            )
         }
     }
 
     /**
      * 获取当前健康状态
      */
-    fun getHealthStatus(): HealthStatus = healthStatus.copy()
+    fun getHealthStatus(): HealthStatus = healthStatus.get()
 } 

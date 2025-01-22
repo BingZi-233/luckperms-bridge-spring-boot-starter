@@ -28,7 +28,9 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.EnableAspectJAutoProxy
+import org.springframework.context.annotation.Import
 import org.springframework.retry.annotation.EnableRetry
+import org.springframework.retry.annotation.RetryConfiguration
 import org.springframework.retry.backoff.ExponentialBackOffPolicy
 import org.springframework.retry.policy.SimpleRetryPolicy
 import org.springframework.retry.support.RetryTemplate
@@ -42,9 +44,10 @@ import java.util.concurrent.TimeUnit
 @Configuration
 @EnableAspectJAutoProxy
 @EnableRetry
-@EnableConfigurationProperties(LuckPermsProperties::class, RetryProperties::class)
+@EnableConfigurationProperties(LuckPermsProperties::class, RetryProperties::class, HealthCheckProperties::class)
 @ConditionalOnProperty(prefix = "luck-perms", name = ["enabled"], havingValue = "true", matchIfMissing = true)
 @ComponentScan("online.bingzi.luck.perms.bridge.spring.boot.starter")
+@Import(RetryConfiguration::class)
 class LuckPermsAutoConfiguration(
     private val properties: LuckPermsProperties,
     private val retryProperties: RetryProperties
