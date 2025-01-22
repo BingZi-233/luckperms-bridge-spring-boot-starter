@@ -2,6 +2,15 @@
 
 本项目遵循 [语义化版本 2.0.0](https://semver.org/lang/zh-CN/) 规范。
 
+## [1.0.6]
+
+### 优化
+- 优化了 `ConnectionStateHandler` 的事件发布机制
+  - 移除了异步事件发布，避免循环依赖问题
+  - 改进了生命周期管理，添加 `@PostConstruct` 和 `@PreDestroy` 支持
+  - 优化了错误处理和日志记录
+  - 修复了 Spring 容器初始化过程中的线程安全问题
+
 ## [1.0.5]
 
 ### 优化

@@ -7,9 +7,12 @@ import online.bingzi.luck.perms.bridge.spring.boot.starter.event.model.state.Con
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.SmartLifecycle
-import org.springframework.core.task.SimpleAsyncTaskExecutor
+import org.springframework.core.task.TaskExecutor
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 import org.springframework.stereotype.Component
 import java.net.SocketException
+import javax.annotation.PostConstruct
+import javax.annotation.PreDestroy
 
 /**
  * SSE连接状态处理器
@@ -28,16 +31,36 @@ class ConnectionStateHandler(
 ) : SmartLifecycle {
     private val logger = LoggerFactory.getLogger(ConnectionStateHandler::class.java)
     private var running = true
-    private val asyncExecutor = SimpleAsyncTaskExecutor("connection-state-handler-")
+    private val taskExecutor: TaskExecutor by lazy {
+        ThreadPoolTaskExecutor().apply {
+            corePoolSize = 1
+            maxPoolSize = 1
+            setThreadNamePrefix("connection-state-handler-")
+            initialize()
+        }
+    }
 
-    override fun start() {
+    @PostConstruct
+    fun init() {
         running = true
         logger.info("ConnectionStateHandler 已启动")
     }
 
+    @PreDestroy
+    fun destroy() {
+        running = false
+        if (taskExecutor is ThreadPoolTaskExecutor) {
+            taskExecutor.shutdown()
+        }
+        logger.info("ConnectionStateHandler 已关闭")
+    }
+
+    override fun start() {
+        running = true
+    }
+
     override fun stop() {
         running = false
-        logger.info("ConnectionStateHandler 正在关闭")
     }
 
     override fun isRunning(): Boolean = running
@@ -141,12 +164,10 @@ class ConnectionStateHandler(
             error = error
         )
 
-        asyncExecutor.execute {
-            try {
-                eventPublisher.publishEvent(event)
-            } catch (e: Exception) {
-                logger.error("发布连接状态事件失败: {}", e.message, e)
-            }
+        try {
+            eventPublisher.publishEvent(event)
+        } catch (e: Exception) {
+            logger.error("发布连接状态事件失败: {}", e.message, e)
         }
     }
 } 
