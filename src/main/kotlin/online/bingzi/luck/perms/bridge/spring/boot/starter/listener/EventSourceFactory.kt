@@ -37,6 +37,7 @@ class EventSourceFactory(
      * - 网络同步事件
      * - 本地同步事件
      * - 自定义消息事件
+     * - ping事件（心跳，自动忽略）
      *
      * @param endpoint 要监听的SSE端点URL
      * @return 配置好的EventSourceListener实例
@@ -48,6 +49,11 @@ class EventSourceFactory(
             }
 
             override fun onEvent(eventSource: EventSource, id: String?, type: String?, data: String) {
+                // 忽略ping事件
+                if (type == "ping") {
+                    return
+                }
+                
                 try {
                     val event = when (type) {
                         "log-broadcast" -> {
