@@ -14,4 +14,4 @@ class PreNetworkSyncEvent(
     val syncId: String,
     val syncType: String,
     priority: EventPriority = EventPriority.HIGH
-) : LuckPermsEvent(source, EventType.PRE_NETWORK_SYNC, priority) 
+) : LuckPermsEvent(source, EventType.PRE_NETWORK_SYNC, priority)
