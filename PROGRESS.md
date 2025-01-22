@@ -27,7 +27,6 @@
 - [x] 实现@RequirePermission注解系统
 - [x] 实现@RequireGroup注解系统
 - [x] 实现@WithContext注解系统
-- [x] 实现@EnableLuckPermsBridge注解
 
 ### 5. 优化与重构
 - [x] 实体类系统优化

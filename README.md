@@ -50,11 +50,10 @@ luck-perms:
 
 ### 启用Starter
 
-在你的Spring Boot主类上添加`@EnableLuckPermsBridge`注解：
+在你的Spring Boot主类上添加`@SpringBootApplication`注解：
 
 ```kotlin
 @SpringBootApplication
-@EnableLuckPermsBridge
 class YourApplication
 
 fun main(args: Array<String>) {
@@ -248,7 +247,7 @@ class SessionUserIdentityService(/*...*/) : UserIdentityService {
 ## 常见问题
 
 1. **配置未生效？**
-   - 检查`@EnableLuckPermsBridge`注解是否添加
+   - 检查`@SpringBootApplication`注解是否添加
    - 确认配置前缀是否正确（luck-perms）
    - 验证配置文件格式是否正确
 
