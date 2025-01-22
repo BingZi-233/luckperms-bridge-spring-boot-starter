@@ -1,9 +1,9 @@
 package online.bingzi.luck.perms.bridge.spring.boot.starter.event.model
 
 import okhttp3.sse.EventSource
-import online.bingzi.luck.perms.bridge.spring.boot.starter.event.EventPriority
-import online.bingzi.luck.perms.bridge.spring.boot.starter.event.EventType
 import online.bingzi.luck.perms.bridge.spring.boot.starter.event.LuckPermsEvent
+import online.bingzi.luck.perms.bridge.spring.boot.starter.event.priority.EventPriority
+import online.bingzi.luck.perms.bridge.spring.boot.starter.event.type.EventType
 
 /**
  * 日志广播事件
