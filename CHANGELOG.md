@@ -2,6 +2,14 @@
 
 本项目遵循 [语义化版本 2.0.0](https://semver.org/lang/zh-CN/) 规范。
 
+## [1.0.7]
+
+### 修复
+- 修复了 `ConnectionStateHandler` 中的注解导入问题
+  - 将 `javax.annotation` 替换为 `jakarta.annotation`
+  - 适配 Spring Boot 3.x 的 Jakarta EE 支持
+  - 更新 `@PostConstruct` 和 `@PreDestroy` 注解的导入
+
 ## [1.0.6]
 
 ### 优化

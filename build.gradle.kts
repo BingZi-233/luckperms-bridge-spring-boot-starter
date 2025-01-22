@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "online.bingzi"
-version = "1.0.6"
+version = "1.0.7"
 
 java {
     toolchain {
