@@ -6,6 +6,7 @@ import org.springframework.retry.backoff.ExponentialBackOffPolicy
 import org.springframework.retry.policy.SimpleRetryPolicy
 import org.springframework.retry.support.RetryTemplate
 import java.io.IOException
+import java.net.ConnectException
 import java.net.SocketException
 import java.net.SocketTimeoutException
 import javax.net.ssl.SSLException
@@ -32,7 +33,8 @@ class SSERetryStrategy(
         IOException::class.java to true,
         SocketException::class.java to true,
         SocketTimeoutException::class.java to true,
-        SSLException::class.java to true
+        SSLException::class.java to true,
+        ConnectException::class.java to true
     )
 
     override fun getMaxAttempts(): Int = maxAttempts
