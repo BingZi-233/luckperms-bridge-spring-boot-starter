@@ -6,7 +6,10 @@ import online.bingzi.luck.perms.bridge.spring.boot.starter.event.model.Connectio
 import online.bingzi.luck.perms.bridge.spring.boot.starter.event.model.state.ConnectionState
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationEventPublisher
+import org.springframework.context.SmartLifecycle
+import org.springframework.core.task.SimpleAsyncTaskExecutor
 import org.springframework.stereotype.Component
+import java.net.SocketException
 
 /**
  * SSE连接状态处理器
@@ -17,13 +20,31 @@ import org.springframework.stereotype.Component
  * 2. 发布连接状态事件
  * 3. 提供连接状态的追踪
  *
- * @property eventPublisher Spring的事件发布器，用于发布连接状态事件
+ * @property eventPublisher Spring事件发布器
  */
 @Component
 class ConnectionStateHandler(
     private val eventPublisher: ApplicationEventPublisher
-) {
+) : SmartLifecycle {
     private val logger = LoggerFactory.getLogger(ConnectionStateHandler::class.java)
+    private var running = true
+    private val asyncExecutor = SimpleAsyncTaskExecutor("connection-state-handler-")
+
+    override fun start() {
+        running = true
+        logger.info("ConnectionStateHandler 已启动")
+    }
+
+    override fun stop() {
+        running = false
+        logger.info("ConnectionStateHandler 正在关闭")
+    }
+
+    override fun isRunning(): Boolean = running
+
+    override fun getPhase(): Int = Int.MAX_VALUE
+
+    override fun isAutoStartup(): Boolean = true
 
     /**
      * 处理连接建立事件
@@ -33,6 +54,10 @@ class ConnectionStateHandler(
      * @param endpoint 连接的目标端点
      */
     fun handleConnectionOpen(eventSource: EventSource, response: Response, endpoint: String) {
+        if (!running) {
+            logger.debug("[{}] 系统正在关闭，不处理SSE连接建立事件", eventSource.hashCode())
+            return
+        }
         logger.info("[{}] SSE连接已建立 - 订阅端点: {}", eventSource.hashCode(), endpoint)
         publishConnectionStateEvent(
             eventSource = eventSource,
@@ -49,6 +74,10 @@ class ConnectionStateHandler(
      * @param endpoint 连接的目标端点
      */
     fun handleConnectionClosed(eventSource: EventSource, endpoint: String) {
+        if (!running) {
+            logger.debug("[{}] 系统正在关闭，不处理SSE连接关闭事件", eventSource.hashCode())
+            return
+        }
         logger.info("[{}] SSE连接已关闭 - 订阅端点: {}", eventSource.hashCode(), endpoint)
         publishConnectionStateEvent(
             eventSource = eventSource,
@@ -66,6 +95,14 @@ class ConnectionStateHandler(
      * @param error 导致失败的异常对象
      */
     fun handleConnectionFailure(eventSource: EventSource, endpoint: String, error: Throwable?) {
+        if (!running) {
+            if (error is SocketException && error.message?.contains("Socket closed") == true) {
+                logger.debug("[{}] 系统正在关闭，SSE连接正常关闭", eventSource.hashCode())
+            } else {
+                logger.debug("[{}] 系统正在关闭，不处理SSE连接失败事件", eventSource.hashCode())
+            }
+            return
+        }
         logger.error("[{}] SSE连接失败 - 订阅端点: {}", eventSource.hashCode(), endpoint, error)
         publishConnectionStateEvent(
             eventSource = eventSource,
@@ -92,14 +129,24 @@ class ConnectionStateHandler(
         message: String,
         error: Throwable? = null
     ) {
-        eventPublisher.publishEvent(
-            ConnectionStateEvent(
-                source = eventSource,
-                state = state,
-                endpoint = endpoint,
-                message = message,
-                error = error
-            )
+        if (!running) {
+            return
+        }
+        
+        val event = ConnectionStateEvent(
+            source = eventSource,
+            state = state,
+            endpoint = endpoint,
+            message = message,
+            error = error
         )
+
+        asyncExecutor.execute {
+            try {
+                eventPublisher.publishEvent(event)
+            } catch (e: Exception) {
+                logger.error("发布连接状态事件失败: {}", e.message, e)
+            }
+        }
     }
 } 

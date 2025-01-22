@@ -32,16 +32,26 @@ class HealthCheckService(
             
             val responseTime = System.currentTimeMillis() - startTime
             
-            if (response.isSuccessful && response.body()?.isHealthy == true) {
-                updateHealthyStatus(responseTime)
-                log.info("健康检查成功，响应时间: {}ms", responseTime)
+            if (response.isSuccessful && response.body() != null) {
+                val healthBody = response.body()!!
+                log.info("收到健康检查响应: health={}, details={}", healthBody.health, healthBody.details)
+                
+                if (healthBody.health) {
+                    updateHealthyStatus(responseTime)
+                    log.info("健康检查成功，响应时间: {}ms", responseTime)
+                } else {
+                    val reason = healthBody.details["reason"]?.toString() ?: "未知原因"
+                    log.error("健康检查返回不健康状态: health={}, details={}", healthBody.health, healthBody.details)
+                    throw RuntimeException("健康检查失败: $reason")
+                }
             } else {
-                val errorMessage = response.errorBody()?.string() ?: "未知错误"
-                throw RuntimeException("健康检查失败: $errorMessage")
+                val errorBody = response.errorBody()?.string()
+                log.error("健康检查请求失败: code={}, error={}", response.code(), errorBody)
+                throw RuntimeException("健康检查失败: ${errorBody ?: "未知错误"}")
             }
         } catch (e: Exception) {
             updateUnhealthyStatus()
-            log.error("健康检查失败: {}", e.message)
+            log.error("健康检查发生异常: {}", e.message, e)
         }
     }
 

@@ -1,40 +1,29 @@
 package online.bingzi.luck.perms.bridge.spring.boot.starter.entity.health
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
 
 /**
  * 健康状态实体类
  * 用于表示LuckPerms系统的健康状态
  *
- * @property isHealthy 系统是否健康
+ * @property health 系统是否健康
  *                true: 系统正常运行
  *                false: 系统存在问题
- * @property storageConnected 存储系统连接状态
- * @property storagePing 存储系统响应时间（毫秒）
- * @property issues 问题描述（如果存在）
+ * @property details 健康检查的详细信息
  */
-data class Health(
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class Health @JsonCreator constructor(
     /**
      * 系统是否健康
      */
-    @JsonProperty("healthy")
-    val isHealthy: Boolean,
+    @JsonProperty("health")
+    val health: Boolean,
 
     /**
-     * 存储系统连接状态
+     * 健康检查的详细信息
      */
-    @JsonProperty("storage_connected")
-    val storageConnected: Boolean,
-
-    /**
-     * 存储系统响应时间（毫秒）
-     */
-    @JsonProperty("storage_ping")
-    val storagePing: Long,
-
-    /**
-     * 问题描述（如果存在）
-     */
-    @JsonProperty("issues")
-    val issues: List<String>? = null
+    @JsonProperty("details")
+    val details: Map<String, Any>
 ) 
