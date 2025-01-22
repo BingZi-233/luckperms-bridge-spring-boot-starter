@@ -3,7 +3,7 @@ package online.bingzi.luck.perms.bridge.spring.boot.starter.listener
 import okhttp3.Response
 import okhttp3.sse.EventSource
 import online.bingzi.luck.perms.bridge.spring.boot.starter.event.model.ConnectionStateEvent
-import online.bingzi.luck.perms.bridge.spring.boot.starter.event.model.state.ConnectionState
+import online.bingzi.luck.perms.bridge.spring.boot.starter.entity.enums.ConnectionStateType
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.SmartLifecycle
@@ -82,7 +82,7 @@ class ConnectionStateHandler(
         logger.info("SSE连接已建立 - 订阅端点: {}", endpoint)
         publishConnectionStateEvent(
             eventSource = eventSource,
-            state = ConnectionState.CONNECTED,
+            state = ConnectionStateType.CONNECTED,
             endpoint = endpoint,
             message = "SSE连接已建立"
         )
@@ -102,7 +102,7 @@ class ConnectionStateHandler(
         logger.info("SSE连接已关闭 - 订阅端点: {}", endpoint)
         publishConnectionStateEvent(
             eventSource = eventSource,
-            state = ConnectionState.CLOSED,
+            state = ConnectionStateType.CLOSED,
             endpoint = endpoint,
             message = "SSE连接已关闭"
         )
@@ -128,7 +128,7 @@ class ConnectionStateHandler(
         logger.error("SSE连接失败 - 订阅端点: {}", endpoint, error)
         publishConnectionStateEvent(
             eventSource = eventSource,
-            state = ConnectionState.FAILED,
+            state = ConnectionStateType.FAILED,
             endpoint = endpoint,
             message = "SSE连接失败",
             error = error
@@ -146,7 +146,7 @@ class ConnectionStateHandler(
      */
     private fun publishConnectionStateEvent(
         eventSource: EventSource,
-        state: ConnectionState,
+        state: ConnectionStateType,
         endpoint: String,
         message: String,
         error: Throwable? = null

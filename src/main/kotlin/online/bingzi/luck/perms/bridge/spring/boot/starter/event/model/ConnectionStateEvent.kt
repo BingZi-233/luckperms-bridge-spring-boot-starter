@@ -2,7 +2,7 @@ package online.bingzi.luck.perms.bridge.spring.boot.starter.event.model
 
 import okhttp3.sse.EventSource
 import online.bingzi.luck.perms.bridge.spring.boot.starter.event.LuckPermsEvent
-import online.bingzi.luck.perms.bridge.spring.boot.starter.event.model.state.ConnectionState
+import online.bingzi.luck.perms.bridge.spring.boot.starter.entity.enums.ConnectionStateType
 import online.bingzi.luck.perms.bridge.spring.boot.starter.event.priority.EventPriority
 import online.bingzi.luck.perms.bridge.spring.boot.starter.event.type.EventType
 
@@ -19,7 +19,7 @@ import online.bingzi.luck.perms.bridge.spring.boot.starter.event.type.EventType
  */
 class ConnectionStateEvent(
     source: EventSource,
-    val state: ConnectionState,
+    val state: ConnectionStateType,
     val endpoint: String,
     val message: String? = null,
     val error: Throwable? = null,
