@@ -2,6 +2,14 @@
 
 本项目遵循 [语义化版本 2.0.0](https://semver.org/lang/zh-CN/) 规范。
 
+## [1.0.8]
+
+### 修复
+- 修复了 `ConnectionStateHandler` 中的类型转换问题
+  - 将 `TaskExecutor` 改为 `ThreadPoolTaskExecutor`
+  - 移除了不必要的类型检查
+  - 优化了线程池的关闭逻辑
+
 ## [1.0.7]
 
 ### 修复

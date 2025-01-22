@@ -7,7 +7,6 @@ import online.bingzi.luck.perms.bridge.spring.boot.starter.event.model.state.Con
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.SmartLifecycle
-import org.springframework.core.task.TaskExecutor
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 import org.springframework.stereotype.Component
 import java.net.SocketException
@@ -31,7 +30,7 @@ class ConnectionStateHandler(
 ) : SmartLifecycle {
     private val logger = LoggerFactory.getLogger(ConnectionStateHandler::class.java)
     private var running = true
-    private val taskExecutor: TaskExecutor by lazy {
+    private val taskExecutor: ThreadPoolTaskExecutor by lazy {
         ThreadPoolTaskExecutor().apply {
             corePoolSize = 1
             maxPoolSize = 1
@@ -49,9 +48,7 @@ class ConnectionStateHandler(
     @PreDestroy
     fun destroy() {
         running = false
-        if (taskExecutor is ThreadPoolTaskExecutor) {
-            taskExecutor.shutdown()
-        }
+        taskExecutor.shutdown()
         logger.info("ConnectionStateHandler 已关闭")
     }
 
