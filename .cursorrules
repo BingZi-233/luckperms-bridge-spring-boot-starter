@@ -19,6 +19,7 @@
    - `PROGRESS.md` 和 `CHANGELOG.md` 不应该使用具体时间
 
 3. **Git版本控制**
+   - 每次Git提交前，都应该滚动版本号
    - 在完成每个小任务后，更新 `PROGRESS.md` 和 `CHANGELOG.md`，并进行规范化的 Git 提交，格式为 `[版本号][模块][任务类型] 任务描述`。
    - 版本号在build.gradle.kts中记录
 
