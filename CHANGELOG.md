@@ -2,6 +2,14 @@
 
 本项目遵循 [语义化版本 2.0.0](https://semver.org/lang/zh-CN/) 规范。
 
+## [1.0.11]
+
+### 优化
+- 优化了 `@EnableLuckPermsBridge` 注解和配置属性的关系
+  - 调整了注解的优先级，使其高于配置文件
+  - 移除了 `LuckPermsAutoConfiguration` 中的条件注解
+  - 更新了注解文档，说明了优先级规则
+
 ## [1.0.10]
 
 ### 优化
