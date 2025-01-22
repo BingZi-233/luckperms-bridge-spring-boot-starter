@@ -2,8 +2,8 @@ package online.bingzi.luck.perms.bridge.spring.boot.starter.listener
 
 import okhttp3.Response
 import okhttp3.sse.EventSource
-import online.bingzi.luck.perms.bridge.spring.boot.starter.event.model.ConnectionState
 import online.bingzi.luck.perms.bridge.spring.boot.starter.event.model.ConnectionStateEvent
+import online.bingzi.luck.perms.bridge.spring.boot.starter.event.model.state.ConnectionState
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationEventPublisher
 
