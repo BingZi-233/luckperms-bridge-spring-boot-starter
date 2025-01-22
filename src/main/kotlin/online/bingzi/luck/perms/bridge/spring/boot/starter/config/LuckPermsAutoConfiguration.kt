@@ -9,6 +9,7 @@ import online.bingzi.luck.perms.bridge.spring.boot.starter.api.UserApi
 import online.bingzi.luck.perms.bridge.spring.boot.starter.aspect.ContextAspect
 import online.bingzi.luck.perms.bridge.spring.boot.starter.aspect.GroupAspect
 import online.bingzi.luck.perms.bridge.spring.boot.starter.aspect.PermissionAspect
+import online.bingzi.luck.perms.bridge.spring.boot.starter.listener.ConnectionStateHandler
 import online.bingzi.luck.perms.bridge.spring.boot.starter.listener.EventSourceFactory
 import online.bingzi.luck.perms.bridge.spring.boot.starter.manager.EventManager
 import online.bingzi.luck.perms.bridge.spring.boot.starter.service.ContextService
@@ -73,9 +74,10 @@ class LuckPermsAutoConfiguration(
     @ConditionalOnMissingBean
     fun eventSourceFactory(
         objectMapper: ObjectMapper,
-        eventPublisher: ApplicationEventPublisher
+        eventPublisher: ApplicationEventPublisher,
+        connectionStateHandler: ConnectionStateHandler
     ): EventSourceFactory {
-        return EventSourceFactory(objectMapper, eventPublisher)
+        return EventSourceFactory(objectMapper, eventPublisher, connectionStateHandler)
     }
 
     /**
