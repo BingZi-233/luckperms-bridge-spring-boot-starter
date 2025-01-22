@@ -1,5 +1,7 @@
 package online.bingzi.luck.perms.bridge.spring.boot.starter.retry
 
+import online.bingzi.luck.perms.bridge.spring.boot.starter.retry.health.HealthCheckRetryListener
+import online.bingzi.luck.perms.bridge.spring.boot.starter.retry.health.HealthCheckRetryStrategy
 import online.bingzi.luck.perms.bridge.spring.boot.starter.retry.sse.SSERetryListener
 import online.bingzi.luck.perms.bridge.spring.boot.starter.retry.sse.SSERetryStrategy
 import org.springframework.retry.support.RetryTemplate
@@ -62,6 +64,22 @@ object RetryTemplateFactory {
         val strategy = SSERetryStrategy(maxAttempts, initialInterval, multiplier, maxInterval)
         val template = strategy.createRetryTemplate()
         template.registerListener(sseRetryListener)
+        return template
+    }
+
+    /**
+     * 创建健康检查专用重试模板
+     */
+    fun createHealthCheckRetryTemplate(
+        maxAttempts: Int = 3,
+        initialInterval: Long = 2000,
+        multiplier: Double = 2.0,
+        maxInterval: Long = 10000,
+        healthCheckRetryListener: HealthCheckRetryListener
+    ): RetryTemplate {
+        val strategy = HealthCheckRetryStrategy(maxAttempts, initialInterval, multiplier, maxInterval)
+        val template = strategy.createRetryTemplate()
+        template.registerListener(healthCheckRetryListener)
         return template
     }
 } 
