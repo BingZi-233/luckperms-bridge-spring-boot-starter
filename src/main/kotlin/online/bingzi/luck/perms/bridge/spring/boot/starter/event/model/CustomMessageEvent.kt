@@ -6,12 +6,12 @@ import online.bingzi.luck.perms.bridge.spring.boot.starter.event.EventType
 import online.bingzi.luck.perms.bridge.spring.boot.starter.event.LuckPermsEvent
 
 /**
- * 同步后事件
- * 在同步操作完成后触发
+ * 自定义消息事件
+ * 用于处理自定义消息的接收
  */
-class PostSyncEvent(
+class CustomMessageEvent(
     source: EventSource,
-    val cause: String,
-    val didSyncOccur: Boolean,
-    priority: EventPriority = EventPriority.HIGH
-) : LuckPermsEvent(source, EventType.POST_SYNC, priority) 
+    val channel: String,
+    val message: String,
+    priority: EventPriority = EventPriority.NORMAL
+) : LuckPermsEvent(source, EventType.CUSTOM_MESSAGE, priority) 

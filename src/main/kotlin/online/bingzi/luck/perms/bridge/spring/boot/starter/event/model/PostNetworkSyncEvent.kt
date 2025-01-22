@@ -1,15 +1,18 @@
 package online.bingzi.luck.perms.bridge.spring.boot.starter.event.model
 
+import okhttp3.sse.EventSource
 import online.bingzi.luck.perms.bridge.spring.boot.starter.event.EventPriority
 import online.bingzi.luck.perms.bridge.spring.boot.starter.event.EventType
+import online.bingzi.luck.perms.bridge.spring.boot.starter.event.LuckPermsEvent
 
 /**
  * 网络同步后事件
  * 在网络同步操作完成后触发
  */
-data class PostNetworkSyncEvent(
+class PostNetworkSyncEvent(
+    source: EventSource,
     val syncId: String,
     val syncType: String,
     val didSyncOccur: Boolean,
-    override val priority: EventPriority = EventPriority.HIGH
-) : AbstractLuckPermsEvent(EventType.POST_NETWORK_SYNC) 
+    priority: EventPriority = EventPriority.HIGH
+) : LuckPermsEvent(source, EventType.POST_NETWORK_SYNC, priority) 
