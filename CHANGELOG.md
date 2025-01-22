@@ -4,6 +4,29 @@
 
 ## [1.0.17]
 
+### [1.0.17-alpha1]
+- 基于Spring-Retry实现重试机制基础框架
+  - 实现基础重试策略接口
+    - 定义RetryStrategy接口，规范重试行为
+    - 确保接口设计符合开闭原则
+    - 为后续策略实现提供基础
+  - 实现固定间隔重试策略
+    - 基于SimpleRetryPolicy实现FixedIntervalRetryStrategy
+    - 支持配置最大重试次数和重试间隔
+    - 支持自定义可重试异常类型
+  - 实现指数退避重试策略
+    - 基于ExponentialBackOffPolicy实现ExponentialBackoffRetryStrategy
+    - 支持配置初始间隔、乘数和最大间隔
+    - 实现智能的退避算法
+  - 添加重试监听器支持
+    - 基于RetryListenerSupport实现DefaultRetryListener
+    - 提供完整的重试过程日志记录
+    - 支持重试统计和监控
+  - 实现重试模板工厂
+    - 提供RetryTemplateFactory统一管理重试策略
+    - 支持灵活的重试策略配置
+    - 简化重试模板的创建和使用
+
 ### 版本计划
 - 1.0.17-alpha1: 基础重试框架
   - 第一阶段：实现基础重试策略接口
