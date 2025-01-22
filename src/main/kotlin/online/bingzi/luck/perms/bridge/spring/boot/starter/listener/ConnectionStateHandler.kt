@@ -29,7 +29,7 @@ class ConnectionStateHandler(
     private val eventPublisher: ApplicationEventPublisher
 ) : SmartLifecycle {
     private val logger = LoggerFactory.getLogger(ConnectionStateHandler::class.java)
-    private var running = true
+    private var running = false
     private val taskExecutor: ThreadPoolTaskExecutor by lazy {
         ThreadPoolTaskExecutor().apply {
             corePoolSize = 1
@@ -58,6 +58,7 @@ class ConnectionStateHandler(
 
     override fun stop() {
         running = false
+        taskExecutor.shutdown()
     }
 
     override fun isRunning(): Boolean = running
@@ -161,10 +162,12 @@ class ConnectionStateHandler(
             error = error
         )
 
-        try {
-            eventPublisher.publishEvent(event)
-        } catch (e: Exception) {
-            logger.error("发布连接状态事件失败: {}", e.message, e)
+        taskExecutor.execute {
+            try {
+                eventPublisher.publishEvent(event)
+            } catch (e: Exception) {
+                logger.error("发布连接状态事件失败: {}", e.message, e)
+            }
         }
     }
 } 
