@@ -9,7 +9,7 @@ import online.bingzi.luck.perms.bridge.spring.boot.starter.api.UserApi
 import online.bingzi.luck.perms.bridge.spring.boot.starter.aspect.ContextAspect
 import online.bingzi.luck.perms.bridge.spring.boot.starter.aspect.GroupAspect
 import online.bingzi.luck.perms.bridge.spring.boot.starter.aspect.PermissionAspect
-import online.bingzi.luck.perms.bridge.spring.boot.starter.listener.EventListener
+import online.bingzi.luck.perms.bridge.spring.boot.starter.listener.EventSourceFactory
 import online.bingzi.luck.perms.bridge.spring.boot.starter.manager.EventManager
 import online.bingzi.luck.perms.bridge.spring.boot.starter.service.ContextService
 import online.bingzi.luck.perms.bridge.spring.boot.starter.service.GroupService
@@ -22,6 +22,7 @@ import online.bingzi.luck.perms.bridge.spring.boot.starter.service.impl.LuckPerm
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.EnableAspectJAutoProxy
@@ -66,23 +67,29 @@ class LuckPermsAutoConfiguration(
     }
 
     /**
+     * 配置EventSourceFactory
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    fun eventSourceFactory(
+        objectMapper: ObjectMapper,
+        eventPublisher: ApplicationEventPublisher
+    ): EventSourceFactory {
+        return EventSourceFactory(objectMapper, eventPublisher)
+    }
+
+    /**
      * 配置EventManager
      */
     @Bean
     @ConditionalOnMissingBean
-    fun eventManager(retrofit: Retrofit, okHttpClient: OkHttpClient, retryTemplate: RetryTemplate): EventManager {
-        return EventManager(retrofit, okHttpClient, retryTemplate)
-    }
-
-    /**
-     * 配置EventListener
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    fun eventListener(eventManager: EventManager): EventListener {
-        val listener = EventListener(eventManager)
-        eventManager.setEventListener(listener)
-        return listener
+    fun eventManager(
+        retrofit: Retrofit,
+        okHttpClient: OkHttpClient,
+        retryTemplate: RetryTemplate,
+        eventSourceFactory: EventSourceFactory
+    ): EventManager {
+        return EventManager(retrofit, okHttpClient, retryTemplate, eventSourceFactory)
     }
 
     /**
