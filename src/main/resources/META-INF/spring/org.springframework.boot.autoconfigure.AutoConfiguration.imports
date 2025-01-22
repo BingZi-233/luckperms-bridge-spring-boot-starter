@@ -1,1 +1,2 @@
-online.bingzi.luck.perms.bridge.spring.boot.starter.config.LuckPermsAutoConfiguration 
+online.bingzi.luck.perms.bridge.spring.boot.starter.config.LuckPermsAutoConfiguration
+online.bingzi.luck.perms.bridge.spring.boot.starter.config.EventConfiguration 

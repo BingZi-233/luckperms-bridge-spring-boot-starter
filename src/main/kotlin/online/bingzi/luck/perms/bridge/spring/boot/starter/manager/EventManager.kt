@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.DisposableBean
 import org.springframework.beans.factory.InitializingBean
 import org.springframework.retry.support.RetryTemplate
-import org.springframework.stereotype.Component
 import retrofit2.Retrofit
 import java.util.concurrent.ConcurrentHashMap
 
@@ -18,7 +17,6 @@ import java.util.concurrent.ConcurrentHashMap
  * 事件管理器
  * 负责管理LuckPerms事件的订阅生命周期
  */
-@Component
 class EventManager(
     private val retrofit: Retrofit,
     private val okHttpClient: OkHttpClient,

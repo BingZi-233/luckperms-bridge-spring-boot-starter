@@ -7,13 +7,11 @@ import okhttp3.sse.EventSourceListener
 import online.bingzi.luck.perms.bridge.spring.boot.starter.event.model.*
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationEventPublisher
-import org.springframework.stereotype.Component
 
 /**
  * 事件源工厂
  * 负责创建事件监听器
  */
-@Component
 class EventSourceFactory(
     private val objectMapper: ObjectMapper,
     private val eventPublisher: ApplicationEventPublisher
