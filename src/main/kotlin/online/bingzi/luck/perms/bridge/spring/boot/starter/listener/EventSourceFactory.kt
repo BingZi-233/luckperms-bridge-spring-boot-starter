@@ -33,22 +33,46 @@ class EventSourceFactory(
                 try {
                     val event = when (type) {
                         "log-broadcast" -> objectMapper.readValue(data, Map::class.java).let {
-                            LogBroadcastEvent(eventSource, it["message"] as String, it["source"] as String)
+                            LogBroadcastEvent(
+                                source = eventSource,
+                                message = it["message"] as String,
+                                sourceType = it["source"] as String
+                            )
                         }
                         "pre-network-sync" -> objectMapper.readValue(data, Map::class.java).let {
-                            PreNetworkSyncEvent(eventSource, it["syncId"] as String, it["type"] as String)
+                            PreNetworkSyncEvent(
+                                source = eventSource,
+                                syncId = it["syncId"] as String,
+                                syncType = it["type"] as String
+                            )
                         }
                         "post-network-sync" -> objectMapper.readValue(data, Map::class.java).let {
-                            PostNetworkSyncEvent(eventSource, it["syncId"] as String, it["type"] as String, it["didSyncOccur"] as Boolean)
+                            PostNetworkSyncEvent(
+                                source = eventSource,
+                                syncId = it["syncId"] as String,
+                                syncType = it["type"] as String,
+                                didSyncOccur = it["didSyncOccur"] as Boolean
+                            )
                         }
                         "pre-sync" -> objectMapper.readValue(data, Map::class.java).let {
-                            PreSyncEvent(eventSource, it["cause"] as String)
+                            PreSyncEvent(
+                                source = eventSource,
+                                cause = it["cause"] as String
+                            )
                         }
                         "post-sync" -> objectMapper.readValue(data, Map::class.java).let {
-                            PostSyncEvent(eventSource, it["cause"] as String, it["didSyncOccur"] as Boolean)
+                            PostSyncEvent(
+                                source = eventSource,
+                                cause = it["cause"] as String,
+                                didSyncOccur = it["didSyncOccur"] as Boolean
+                            )
                         }
                         "custom-message" -> objectMapper.readValue(data, Map::class.java).let {
-                            CustomMessageEvent(eventSource, it["channel"] as String, it["message"] as String)
+                            CustomMessageEvent(
+                                source = eventSource,
+                                channel = it["channel"] as String,
+                                message = it["message"] as String
+                            )
                         }
                         else -> {
                             logger.warn("未知的事件类型: $type")

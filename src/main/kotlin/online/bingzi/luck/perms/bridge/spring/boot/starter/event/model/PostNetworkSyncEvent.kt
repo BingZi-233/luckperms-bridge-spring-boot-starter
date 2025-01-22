@@ -1,6 +1,5 @@
 package online.bingzi.luck.perms.bridge.spring.boot.starter.event.model
 
-import online.bingzi.luck.perms.bridge.spring.boot.starter.event.AbstractLuckPermsEvent
 import online.bingzi.luck.perms.bridge.spring.boot.starter.event.EventPriority
 import online.bingzi.luck.perms.bridge.spring.boot.starter.event.EventType
 
