@@ -3,7 +3,7 @@ package online.bingzi.luck.perms.bridge.spring.boot.starter.retry.sse
 import org.slf4j.LoggerFactory
 import org.springframework.retry.RetryCallback
 import org.springframework.retry.RetryContext
-import org.springframework.retry.listener.RetryListenerSupport
+import org.springframework.retry.RetryListener
 import org.springframework.stereotype.Component
 
 /**
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component
 @Component
 class SSERetryListener(
     private val connectionManager: SSEConnectionManager
-) : RetryListenerSupport() {
+) : RetryListener {
     private val log = LoggerFactory.getLogger(SSERetryListener::class.java)
 
     override fun <T, E : Throwable> onError(
@@ -28,7 +28,6 @@ class SSERetryListener(
             "异常信息: ${throwable.message}, " +
             "累计停机时间: ${stats.downtime}ms"
         )
-        super.onError(context, callback, throwable)
     }
 
     override fun <T, E : Throwable> close(
@@ -50,6 +49,15 @@ class SSERetryListener(
                 "累计运行时间: ${stats.uptime}ms"
             )
         }
-        super.close(context, callback, throwable)
+    }
+
+    override fun <T, E : Throwable> open(
+        context: RetryContext,
+        callback: RetryCallback<T, E>
+    ): Boolean {
+        if (context.retryCount > 0) {
+            log.info("开始第 ${context.retryCount} 次重试")
+        }
+        return true // 返回true表示允许重试
     }
 } 

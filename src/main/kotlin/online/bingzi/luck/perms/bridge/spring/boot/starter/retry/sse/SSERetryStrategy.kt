@@ -9,6 +9,7 @@ import java.io.IOException
 import java.net.SocketException
 import java.net.SocketTimeoutException
 import javax.net.ssl.SSLException
+import kotlin.math.pow
 
 /**
  * SSE专用重试策略

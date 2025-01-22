@@ -3,13 +3,13 @@ package online.bingzi.luck.perms.bridge.spring.boot.starter.retry
 import org.slf4j.LoggerFactory
 import org.springframework.retry.RetryCallback
 import org.springframework.retry.RetryContext
-import org.springframework.retry.listener.RetryListenerSupport
+import org.springframework.retry.RetryListener
 
 /**
- * 默认重试监听器实现
+ * 默认重试监听器
  * 用于记录重试过程中的关键事件
  */
-class DefaultRetryListener : RetryListenerSupport() {
+class DefaultRetryListener : RetryListener {
     private val log = LoggerFactory.getLogger(DefaultRetryListener::class.java)
 
     override fun <T, E : Throwable> onError(
@@ -22,7 +22,6 @@ class DefaultRetryListener : RetryListenerSupport() {
             "异常类型: ${throwable.javaClass.simpleName}, " +
             "异常信息: ${throwable.message}"
         )
-        super.onError(context, callback, throwable)
     }
 
     override fun <T, E : Throwable> close(
@@ -39,6 +38,15 @@ class DefaultRetryListener : RetryListenerSupport() {
         } else {
             log.info("重试操作成功完成 - 总重试次数: ${context.retryCount}")
         }
-        super.close(context, callback, throwable)
+    }
+
+    override fun <T, E : Throwable> open(
+        context: RetryContext,
+        callback: RetryCallback<T, E>
+    ): Boolean {
+        if (context.retryCount > 0) {
+            log.info("开始第 ${context.retryCount} 次重试")
+        }
+        return true // 返回true表示允许重试
     }
 } 

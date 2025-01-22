@@ -1,5 +1,6 @@
 package online.bingzi.luck.perms.bridge.spring.boot.starter.retry.sse
 
+import online.bingzi.luck.perms.bridge.spring.boot.starter.entity.ConnectionStats
 import online.bingzi.luck.perms.bridge.spring.boot.starter.event.model.state.ConnectionState
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -100,15 +101,3 @@ class SSEConnectionManager {
         }
     }
 }
-
-/**
- * 连接统计信息
- */
-data class ConnectionStats(
-    val currentState: ConnectionState,
-    val retryCount: Int,
-    val lastConnectedTime: Instant?,
-    val lastDisconnectedTime: Instant?,
-    val uptime: Long,
-    val downtime: Long
-) 
