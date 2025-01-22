@@ -33,22 +33,22 @@ class EventSourceFactory(
                 try {
                     val event = when (type) {
                         "log-broadcast" -> objectMapper.readValue(data, Map::class.java).let {
-                            LogBroadcastEvent(this, it["message"] as String, it["source"] as String)
+                            LogBroadcastEvent(eventSource, it["message"] as String, it["source"] as String)
                         }
                         "pre-network-sync" -> objectMapper.readValue(data, Map::class.java).let {
-                            PreNetworkSyncEvent(this, it["syncId"] as String, it["type"] as String)
+                            PreNetworkSyncEvent(eventSource, it["syncId"] as String, it["type"] as String)
                         }
                         "post-network-sync" -> objectMapper.readValue(data, Map::class.java).let {
-                            PostNetworkSyncEvent(this, it["syncId"] as String, it["type"] as String, it["didSyncOccur"] as Boolean)
+                            PostNetworkSyncEvent(eventSource, it["syncId"] as String, it["type"] as String, it["didSyncOccur"] as Boolean)
                         }
                         "pre-sync" -> objectMapper.readValue(data, Map::class.java).let {
-                            PreSyncEvent(this, it["cause"] as String)
+                            PreSyncEvent(eventSource, it["cause"] as String)
                         }
                         "post-sync" -> objectMapper.readValue(data, Map::class.java).let {
-                            PostSyncEvent(this, it["cause"] as String, it["didSyncOccur"] as Boolean)
+                            PostSyncEvent(eventSource, it["cause"] as String, it["didSyncOccur"] as Boolean)
                         }
                         "custom-message" -> objectMapper.readValue(data, Map::class.java).let {
-                            CustomMessageEvent(this, it["channel"] as String, it["message"] as String)
+                            CustomMessageEvent(eventSource, it["channel"] as String, it["message"] as String)
                         }
                         else -> {
                             logger.warn("未知的事件类型: $type")
