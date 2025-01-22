@@ -21,6 +21,15 @@
 - 添加重试配置相关文档
 - 更新配置示例和最佳实践
 
+### 重构
+- 将 `LuckPermsEvent.kt` 中的枚举类拆分为独立文件，遵循单一职责原则
+  - 创建 `event/type/EventType.kt` 文件，独立管理事件类型枚举
+  - 创建 `event/priority/EventPriority.kt` 文件，独立管理事件优先级枚举
+  - 优化了主事件类的结构和导入关系
+- 将 `ConnectionStateEvent.kt` 中的枚举类拆分为独立文件
+  - 创建 `event/model/state/ConnectionState.kt` 文件，独立管理连接状态枚举
+  - 优化了事件类的结构和导入关系
+
 ## [1.0.2]
 
 ### 新增

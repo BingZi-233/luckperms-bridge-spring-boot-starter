@@ -73,7 +73,7 @@ class EventManager(
         retryTemplate.execute<Unit, Exception> { context ->
             try {
                 val eventSource = EventSources.createFactory(okHttpClient)
-                    .newEventSource(request, eventSourceFactory.createListener())
+                    .newEventSource(request, eventSourceFactory.createListener(request.url.toString()))
                 eventSources[request] = eventSource
                 logger.info("已成功订阅事件: ${request.url}, 重试次数: ${context.retryCount}")
             } catch (e: Exception) {

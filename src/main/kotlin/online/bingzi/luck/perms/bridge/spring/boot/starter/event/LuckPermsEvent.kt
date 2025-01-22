@@ -1,6 +1,8 @@
 package online.bingzi.luck.perms.bridge.spring.boot.starter.event
 
 import okhttp3.sse.EventSource
+import online.bingzi.luck.perms.bridge.spring.boot.starter.event.priority.EventPriority
+import online.bingzi.luck.perms.bridge.spring.boot.starter.event.type.EventType
 import org.springframework.context.ApplicationEvent
 import java.time.Instant
 
@@ -22,26 +24,3 @@ abstract class LuckPermsEvent(
      */
     fun getEventSource(): EventSource = source as EventSource
 }
-
-/**
- * 事件类型枚举
- */
-enum class EventType {
-    LOG_BROADCAST,
-    PRE_NETWORK_SYNC,
-    POST_NETWORK_SYNC,
-    PRE_SYNC,
-    POST_SYNC,
-    CUSTOM_MESSAGE
-}
-
-/**
- * 事件优先级枚举
- */
-enum class EventPriority {
-    LOWEST,
-    LOW,
-    NORMAL,
-    HIGH,
-    HIGHEST
-} 
