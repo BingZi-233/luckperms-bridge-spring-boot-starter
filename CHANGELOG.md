@@ -2,6 +2,23 @@
 
 本项目遵循 [语义化版本 2.0.0](https://semver.org/lang/zh-CN/) 规范。
 
+## [1.0.16]
+
+### 修复
+- 修复了 `luck-perms.enabled` 配置属性无法控制功能启用/禁用的问题
+  - 在 `LuckPermsAutoConfiguration` 类上添加了 `@ConditionalOnProperty` 注解
+  - 在 `EventConfiguration` 类上添加了 `@ConditionalOnProperty` 注解，修复了禁用功能时的Bean依赖问题
+  - 配置属性默认值为 true，保持向后兼容
+  - 现在可以通过设置 `luck-perms.enabled=false` 来禁用功能
+
+### 优化
+- 优化了日志输出格式
+  - 移除了日志中的事件源HashCode前缀
+  - 使日志输出更加简洁清晰
+  - 统一了日志格式风格
+  - 改进了事件监听器的启动和关闭提示信息
+  - 优化了事件订阅成功的日志输出，首次成功时不显示重试次数
+
 ## [1.0.15]
 
 ### 变更

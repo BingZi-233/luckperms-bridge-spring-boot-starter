@@ -42,14 +42,14 @@ class ConnectionStateHandler(
     @PostConstruct
     fun init() {
         running = true
-        logger.info("ConnectionStateHandler 已启动")
+        logger.info("LuckPerms Bridge 事件监听器已启动")
     }
 
     @PreDestroy
     fun destroy() {
         running = false
         taskExecutor.shutdown()
-        logger.info("ConnectionStateHandler 已关闭")
+        logger.info("LuckPerms Bridge 事件监听器已关闭")
     }
 
     override fun start() {
@@ -76,10 +76,10 @@ class ConnectionStateHandler(
      */
     fun handleConnectionOpen(eventSource: EventSource, response: Response, endpoint: String) {
         if (!running) {
-            logger.debug("[{}] 系统正在关闭，不处理SSE连接建立事件", eventSource.hashCode())
+            logger.debug("系统正在关闭，不处理SSE连接建立事件")
             return
         }
-        logger.info("[{}] SSE连接已建立 - 订阅端点: {}", eventSource.hashCode(), endpoint)
+        logger.info("SSE连接已建立 - 订阅端点: {}", endpoint)
         publishConnectionStateEvent(
             eventSource = eventSource,
             state = ConnectionState.CONNECTED,
@@ -96,10 +96,10 @@ class ConnectionStateHandler(
      */
     fun handleConnectionClosed(eventSource: EventSource, endpoint: String) {
         if (!running) {
-            logger.debug("[{}] 系统正在关闭，不处理SSE连接关闭事件", eventSource.hashCode())
+            logger.debug("系统正在关闭，不处理SSE连接关闭事件")
             return
         }
-        logger.info("[{}] SSE连接已关闭 - 订阅端点: {}", eventSource.hashCode(), endpoint)
+        logger.info("SSE连接已关闭 - 订阅端点: {}", endpoint)
         publishConnectionStateEvent(
             eventSource = eventSource,
             state = ConnectionState.CLOSED,
@@ -118,13 +118,14 @@ class ConnectionStateHandler(
     fun handleConnectionFailure(eventSource: EventSource, endpoint: String, error: Throwable?) {
         if (!running) {
             if (error is SocketException && error.message?.contains("Socket closed") == true) {
-                logger.debug("[{}] 系统正在关闭，SSE连接正常关闭", eventSource.hashCode())
+                logger.debug("系统正在关闭，SSE连接正常关闭")
             } else {
-                logger.debug("[{}] 系统正在关闭，不处理SSE连接失败事件", eventSource.hashCode())
+                logger.debug("系统正在关闭，不处理SSE连接失败事件")
             }
             return
         }
-        logger.error("[{}] SSE连接失败 - 订阅端点: {}", eventSource.hashCode(), endpoint, error)
+
+        logger.error("SSE连接失败 - 订阅端点: {}", endpoint, error)
         publishConnectionStateEvent(
             eventSource = eventSource,
             state = ConnectionState.FAILED,

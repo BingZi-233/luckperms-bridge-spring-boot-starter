@@ -6,6 +6,7 @@ import online.bingzi.luck.perms.bridge.spring.boot.starter.listener.ConnectionSt
 import online.bingzi.luck.perms.bridge.spring.boot.starter.listener.EventSourceFactory
 import online.bingzi.luck.perms.bridge.spring.boot.starter.manager.EventManager
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -17,6 +18,7 @@ import retrofit2.Retrofit
  * 负责配置事件相关的Bean
  */
 @Configuration
+@ConditionalOnProperty(prefix = "luck-perms", name = ["enabled"], matchIfMissing = true)
 class EventConfiguration {
 
     /**

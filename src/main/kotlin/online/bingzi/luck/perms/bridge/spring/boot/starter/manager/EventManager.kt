@@ -75,7 +75,11 @@ class EventManager(
                 val eventSource = EventSources.createFactory(okHttpClient)
                     .newEventSource(request, eventSourceFactory.createListener(request.url.toString()))
                 eventSources[request] = eventSource
-                logger.info("已成功订阅事件: ${request.url}, 重试次数: ${context.retryCount}")
+                if (context.retryCount > 0) {
+                    logger.info("已成功订阅事件: ${request.url}, 重试次数: ${context.retryCount}")
+                } else {
+                    logger.info("已成功订阅事件: ${request.url}")
+                }
             } catch (e: Exception) {
                 logger.error("订阅事件失败: ${request.url}, 重试次数: ${context.retryCount}", e)
                 throw e

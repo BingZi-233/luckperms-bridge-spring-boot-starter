@@ -102,13 +102,13 @@ class EventSourceFactory(
                             )
                         }
                         else -> {
-                            logger.warn("[{}] 未知的事件类型: {} - 订阅端点: {}", eventSource.hashCode(), type, endpoint)
+                            logger.warn("未知的事件类型: {} - 订阅端点: {}", type, endpoint)
                             return
                         }
                     }
                     eventPublisher.publishEvent(event)
                 } catch (e: Exception) {
-                    logger.error("[{}] 处理事件时发生错误 - 订阅端点: {}", eventSource.hashCode(), endpoint, e)
+                    logger.error("处理事件时发生错误 - 订阅端点: {}", endpoint, e)
                 }
             }
 

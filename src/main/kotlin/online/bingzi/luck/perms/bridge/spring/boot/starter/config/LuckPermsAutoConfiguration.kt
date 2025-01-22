@@ -21,6 +21,7 @@ import online.bingzi.luck.perms.bridge.spring.boot.starter.service.impl.LuckPerm
 import online.bingzi.luck.perms.bridge.spring.boot.starter.service.impl.LuckPermsGroupService
 import online.bingzi.luck.perms.bridge.spring.boot.starter.service.impl.LuckPermsPermissionService
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.annotation.Bean
@@ -46,6 +47,7 @@ import java.util.concurrent.TimeUnit
 @EnableConfigurationProperties(LuckPermsProperties::class, RetryProperties::class, HealthCheckProperties::class)
 @ComponentScan("online.bingzi.luck.perms.bridge.spring.boot.starter")
 @Import(RetryConfiguration::class)
+@ConditionalOnProperty(prefix = "luck-perms", name = ["enabled"], matchIfMissing = true)
 class LuckPermsAutoConfiguration(
     private val properties: LuckPermsProperties,
     private val retryProperties: RetryProperties
