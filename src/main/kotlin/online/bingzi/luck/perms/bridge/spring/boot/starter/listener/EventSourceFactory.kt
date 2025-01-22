@@ -62,32 +62,29 @@ class EventSourceFactory(
                             val node = objectMapper.readTree(data)
                             PreNetworkSyncEvent(
                                 source = eventSource,
-                                syncId = node.get("syncId").asText(),
-                                syncType = node.get("type").asText()
+                                sourceType = node.get("type").asText()
                             )
                         }
                         "post-network-sync" -> {
                             val node = objectMapper.readTree(data)
                             PostNetworkSyncEvent(
                                 source = eventSource,
-                                syncId = node.get("syncId").asText(),
-                                syncType = node.get("type").asText(),
-                                didSyncOccur = node.get("didSyncOccur").asBoolean()
+                                sourceType = node.get("type").asText(),
+                                success = node.get("didSyncOccur").asBoolean()
                             )
                         }
                         "pre-sync" -> {
                             val node = objectMapper.readTree(data)
                             PreSyncEvent(
                                 source = eventSource,
-                                cause = node.get("cause").asText()
+                                sourceType = node.get("cause").asText()
                             )
                         }
                         "post-sync" -> {
                             val node = objectMapper.readTree(data)
                             PostSyncEvent(
                                 source = eventSource,
-                                cause = node.get("cause").asText(),
-                                didSyncOccur = node.get("didSyncOccur").asBoolean()
+                                sourceType = node.get("cause").asText()
                             )
                         }
                         "custom-message" -> {
