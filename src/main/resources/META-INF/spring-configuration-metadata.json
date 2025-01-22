@@ -61,6 +61,34 @@
       "defaultValue": "5s"
     },
     {
+      "name": "luck-perms.health-check.max-attempts",
+      "type": "java.lang.Integer",
+      "description": "健康检查最大重试次数。达到此次数后将不再重试。适用场景：3（快速失败），5（推荐），10（高可用性）。",
+      "sourceType": "online.bingzi.luck.perms.bridge.spring.boot.starter.config.HealthCheckProperties",
+      "defaultValue": 3
+    },
+    {
+      "name": "luck-perms.health-check.initial-interval",
+      "type": "java.lang.Long",
+      "description": "健康检查初始重试间隔（毫秒）。首次失败后等待多长时间进行第一次重试。适用场景：1000（快速响应），2000（推荐），5000（网络不稳定）。",
+      "sourceType": "online.bingzi.luck.perms.bridge.spring.boot.starter.config.HealthCheckProperties",
+      "defaultValue": 2000
+    },
+    {
+      "name": "luck-perms.health-check.multiplier",
+      "type": "java.lang.Double",
+      "description": "健康检查重试间隔倍数。每次重试失败后，下一次重试间隔相对于上一次的倍数。适用场景：1.5（温和增长），2.0（推荐），3.0（快速增长）。",
+      "sourceType": "online.bingzi.luck.perms.bridge.spring.boot.starter.config.HealthCheckProperties",
+      "defaultValue": 2.0
+    },
+    {
+      "name": "luck-perms.health-check.max-interval",
+      "type": "java.lang.Long",
+      "description": "健康检查最大重试间隔（毫秒）。重试间隔增长的上限，防止间隔时间过长。适用场景：5000（快速响应），10000（推荐），30000（高容错）。",
+      "sourceType": "online.bingzi.luck.perms.bridge.spring.boot.starter.config.HealthCheckProperties",
+      "defaultValue": 10000
+    },
+    {
       "name": "luck-perms.retry.initial-interval",
       "type": "java.lang.Long",
       "description": "初始重试间隔（毫秒）。首次失败后等待多长时间进行第一次重试。",
@@ -147,6 +175,74 @@
         {
           "value": "10s",
           "description": "10秒超时（适用于网络不稳定场景）"
+        }
+      ]
+    },
+    {
+      "name": "luck-perms.health-check.max-attempts",
+      "values": [
+        {
+          "value": 3,
+          "description": "3次重试（快速失败）"
+        },
+        {
+          "value": 5,
+          "description": "5次重试（推荐）"
+        },
+        {
+          "value": 10,
+          "description": "10次重试（高可用性）"
+        }
+      ]
+    },
+    {
+      "name": "luck-perms.health-check.initial-interval",
+      "values": [
+        {
+          "value": 1000,
+          "description": "1秒（快速响应）"
+        },
+        {
+          "value": 2000,
+          "description": "2秒（推荐）"
+        },
+        {
+          "value": 5000,
+          "description": "5秒（网络不稳定）"
+        }
+      ]
+    },
+    {
+      "name": "luck-perms.health-check.multiplier",
+      "values": [
+        {
+          "value": 1.5,
+          "description": "1.5倍（温和增长）"
+        },
+        {
+          "value": 2.0,
+          "description": "2.0倍（推荐）"
+        },
+        {
+          "value": 3.0,
+          "description": "3.0倍（快速增长）"
+        }
+      ]
+    },
+    {
+      "name": "luck-perms.health-check.max-interval",
+      "values": [
+        {
+          "value": 5000,
+          "description": "5秒（快速响应）"
+        },
+        {
+          "value": 10000,
+          "description": "10秒（推荐）"
+        },
+        {
+          "value": 30000,
+          "description": "30秒（高容错）"
         }
       ]
     },

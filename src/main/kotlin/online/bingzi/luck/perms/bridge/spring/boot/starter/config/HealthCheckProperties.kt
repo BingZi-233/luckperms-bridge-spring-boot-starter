@@ -18,5 +18,25 @@ data class HealthCheckProperties(
     /**
      * 健康检查超时时间
      */
-    val timeout: Duration = Duration.ofSeconds(5)
+    val timeout: Duration = Duration.ofSeconds(5),
+
+    /**
+     * 最大重试次数
+     */
+    val maxAttempts: Int = 3,
+
+    /**
+     * 初始重试间隔（毫秒）
+     */
+    val initialInterval: Long = 2000,
+
+    /**
+     * 重试间隔倍数
+     */
+    val multiplier: Double = 2.0,
+
+    /**
+     * 最大重试间隔（毫秒）
+     */
+    val maxInterval: Long = 10000
 ) 
