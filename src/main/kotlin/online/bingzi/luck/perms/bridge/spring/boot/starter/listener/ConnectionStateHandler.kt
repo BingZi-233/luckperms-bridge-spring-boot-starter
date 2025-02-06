@@ -2,10 +2,12 @@ package online.bingzi.luck.perms.bridge.spring.boot.starter.listener
 
 import jakarta.annotation.PostConstruct
 import jakarta.annotation.PreDestroy
+import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.sse.EventSource
 import okhttp3.sse.EventSourceListener
+import okhttp3.sse.EventSources
 import online.bingzi.luck.perms.bridge.spring.boot.starter.entity.enums.ConnectionStateType
 import online.bingzi.luck.perms.bridge.spring.boot.starter.event.model.ConnectionStateEvent
 import online.bingzi.luck.perms.bridge.spring.boot.starter.event.model.SSERetryEvent
@@ -13,14 +15,12 @@ import online.bingzi.luck.perms.bridge.spring.boot.starter.retry.sse.SSEConnecti
 import online.bingzi.luck.perms.bridge.spring.boot.starter.retry.sse.SSERetryListener
 import online.bingzi.luck.perms.bridge.spring.boot.starter.retry.sse.SSERetryStrategy
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.SmartLifecycle
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 import org.springframework.stereotype.Component
 import java.net.SocketException
-import okhttp3.OkHttpClient
-import okhttp3.sse.EventSources
-import org.springframework.beans.factory.annotation.Qualifier
 
 /**
  * SSE连接状态处理器
@@ -193,16 +193,16 @@ class ConnectionStateHandler(
                 val retryTemplate = retryStrategy.createRetryTemplate()
                 taskExecutor.execute { // 在任务执行器中执行重试逻辑
                     try {
-                        retryTemplate.execute<Unit, Throwable>({ context ->
+                        retryTemplate.execute<Unit, Throwable> { context ->
                             // 设置重试上下文的端点信息
                             retryListener.setEndpoint(context, endpoint)
                             // 更新状态为正在连接
                             connectionManager.updateState(endpoint, ConnectionStateType.CONNECTING)
-                            
+
                             // 关闭旧的连接
                             eventSources[endpoint]?.cancel() // 取消旧的EventSource连接
                             eventSources.remove(endpoint) // 移除旧的连接
-                            
+
                             // 触发重新连接事件
                             publishConnectionStateEvent(
                                 eventSource = eventSource,
@@ -210,7 +210,7 @@ class ConnectionStateHandler(
                                 endpoint = endpoint,
                                 message = "正在重新建立SSE连接" // 发布重连事件
                             )
-                            
+
                             // 等待退避时间
                             Thread.sleep(backoffPeriod) // 休眠，等待重试时间
 
@@ -236,9 +236,7 @@ class ConnectionStateHandler(
                                 .newEventSource(request, createListener(endpoint)) // 创建新的EventSource
 
                             eventSources[endpoint] = newEventSource // 存储新的EventSource
-                            
-                            Unit
-                        })
+                        }
                     } catch (e: Exception) {
                         handleFinalFailure(eventSource, endpoint, e) // 处理最终失败
                     }

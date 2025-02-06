@@ -1,10 +1,9 @@
 package online.bingzi.luck.perms.bridge.spring.boot.starter.service.impl
 
 import online.bingzi.luck.perms.bridge.spring.boot.starter.service.UserIdentityService
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
-import java.util.UUID
+import java.util.*
 
 /**
  * 默认用户身份服务实现类

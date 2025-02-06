@@ -2,10 +2,11 @@ package online.bingzi.luck.perms.bridge.spring.boot.starter.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import okhttp3.OkHttpClient
-import online.bingzi.luck.perms.bridge.spring.boot.starter.listener.ConnectionStateHandler
+import online.bingzi.luck.perms.bridge.spring.boot.starter.listener.ConnectionStateProcessor
 import online.bingzi.luck.perms.bridge.spring.boot.starter.listener.EventSourceFactory
 import online.bingzi.luck.perms.bridge.spring.boot.starter.manager.EventManager
 import online.bingzi.luck.perms.bridge.spring.boot.starter.retry.sse.SSERetryStrategy
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.ApplicationEventPublisher
@@ -13,9 +14,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.retry.support.RetryTemplate
 import retrofit2.Retrofit
-import org.springframework.beans.factory.annotation.Qualifier
-import online.bingzi.luck.perms.bridge.spring.boot.starter.config.EventSourceConfig
-import online.bingzi.luck.perms.bridge.spring.boot.starter.listener.ConnectionStateProcessor
 
 /**
  * 事件配置类

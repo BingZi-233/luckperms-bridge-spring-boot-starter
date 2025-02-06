@@ -4,7 +4,6 @@ import online.bingzi.luck.perms.bridge.spring.boot.starter.retry.health.HealthCh
 import online.bingzi.luck.perms.bridge.spring.boot.starter.retry.health.HealthCheckRetryStrategy
 import online.bingzi.luck.perms.bridge.spring.boot.starter.retry.sse.SSERetryListener
 import online.bingzi.luck.perms.bridge.spring.boot.starter.retry.sse.SSERetryStrategy
-import org.springframework.retry.RetryPolicy
 import org.springframework.retry.backoff.ExponentialBackOffPolicy
 import org.springframework.retry.backoff.FixedBackOffPolicy
 import org.springframework.retry.policy.SimpleRetryPolicy
