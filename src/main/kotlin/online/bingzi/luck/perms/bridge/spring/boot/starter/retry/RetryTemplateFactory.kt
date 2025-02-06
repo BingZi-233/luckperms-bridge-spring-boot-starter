@@ -4,6 +4,10 @@ import online.bingzi.luck.perms.bridge.spring.boot.starter.retry.health.HealthCh
 import online.bingzi.luck.perms.bridge.spring.boot.starter.retry.health.HealthCheckRetryStrategy
 import online.bingzi.luck.perms.bridge.spring.boot.starter.retry.sse.SSERetryListener
 import online.bingzi.luck.perms.bridge.spring.boot.starter.retry.sse.SSERetryStrategy
+import org.springframework.retry.RetryPolicy
+import org.springframework.retry.backoff.ExponentialBackOffPolicy
+import org.springframework.retry.backoff.FixedBackOffPolicy
+import org.springframework.retry.policy.SimpleRetryPolicy
 import org.springframework.retry.support.RetryTemplate
 
 /**
@@ -16,13 +20,20 @@ object RetryTemplateFactory {
      */
     fun createFixedIntervalRetryTemplate(
         maxAttempts: Int = 3,
-        backoffPeriod: Long = 1000,
-        retryableExceptions: Map<Class<out Throwable>, Boolean> = mapOf(
-            Exception::class.java to true
-        )
+        interval: Long = 1000
     ): RetryTemplate {
-        val strategy = FixedIntervalRetryStrategy(maxAttempts, backoffPeriod, retryableExceptions)
-        val template = strategy.createRetryTemplate()
+        val strategy = FixedIntervalRetryStrategy(maxAttempts, interval)
+        val template = RetryTemplate()
+        
+        // 设置重试策略
+        val retryPolicy = SimpleRetryPolicy(strategy.getMaxAttempts())
+        template.setRetryPolicy(retryPolicy)
+        
+        // 设置退避策略
+        val backOffPolicy = FixedBackOffPolicy()
+        backOffPolicy.backOffPeriod = strategy.getBackoffPeriod(0)
+        template.setBackOffPolicy(backOffPolicy)
+        
         template.registerListener(DefaultRetryListener())
         return template
     }
@@ -34,19 +45,27 @@ object RetryTemplateFactory {
         maxAttempts: Int = 3,
         initialInterval: Long = 1000,
         multiplier: Double = 2.0,
-        maxInterval: Long = 10000,
-        retryableExceptions: Map<Class<out Throwable>, Boolean> = mapOf(
-            Exception::class.java to true
-        )
+        maxInterval: Long = 10000
     ): RetryTemplate {
         val strategy = ExponentialBackoffRetryStrategy(
             maxAttempts,
             initialInterval,
             multiplier,
-            maxInterval,
-            retryableExceptions
+            maxInterval
         )
-        val template = strategy.createRetryTemplate()
+        val template = RetryTemplate()
+        
+        // 设置重试策略
+        val retryPolicy = SimpleRetryPolicy(strategy.getMaxAttempts())
+        template.setRetryPolicy(retryPolicy)
+        
+        // 设置退避策略
+        val backOffPolicy = ExponentialBackOffPolicy()
+        backOffPolicy.initialInterval = initialInterval
+        backOffPolicy.multiplier = multiplier
+        backOffPolicy.maxInterval = maxInterval
+        template.setBackOffPolicy(backOffPolicy)
+        
         template.registerListener(DefaultRetryListener())
         return template
     }
