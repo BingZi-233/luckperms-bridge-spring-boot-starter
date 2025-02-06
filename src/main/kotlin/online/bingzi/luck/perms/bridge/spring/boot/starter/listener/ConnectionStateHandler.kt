@@ -50,6 +50,9 @@ class ConnectionStateHandler(
         }
     }
 
+    // 存储每个端点对应的EventSource
+    private val eventSources = mutableMapOf<String, EventSource>()
+
     @PostConstruct
     fun init() {
         running = true
@@ -59,6 +62,15 @@ class ConnectionStateHandler(
     @PreDestroy
     fun destroy() {
         running = false
+        // 关闭所有连接
+        eventSources.forEach { (_, source) ->
+            try {
+                source.cancel()
+            } catch (e: Exception) {
+                logger.warn("关闭SSE连接时发生错误: {}", e.message)
+            }
+        }
+        eventSources.clear()
         taskExecutor.shutdown()
         logger.info("LuckPerms Bridge 事件监听器已关闭")
     }
@@ -90,6 +102,7 @@ class ConnectionStateHandler(
             logger.debug("系统正在关闭，不处理SSE连接建立事件")
             return
         }
+        eventSources[endpoint] = eventSource
         connectionManager.updateState(endpoint, ConnectionStateType.CONNECTED)
         publishConnectionStateEvent(
             eventSource = eventSource,
@@ -110,6 +123,7 @@ class ConnectionStateHandler(
             logger.debug("系统正在关闭，不处理SSE连接关闭事件")
             return
         }
+        eventSources.remove(endpoint)
         connectionManager.updateState(endpoint, ConnectionStateType.CLOSED)
         publishConnectionStateEvent(
             eventSource = eventSource,
@@ -150,9 +164,23 @@ class ConnectionStateHandler(
                         retryTemplate.execute<Unit, Throwable>({ context ->
                             // 设置重试上下文的端点信息
                             retryListener.setEndpoint(context, endpoint)
-                            // 重试逻辑在这里执行
+                            // 更新状态为正在连接
                             connectionManager.updateState(endpoint, ConnectionStateType.CONNECTING)
-                            // 重试逻辑由EventSourceFactory处理
+                            
+                            // 关闭旧的连接
+                            eventSources[endpoint]?.cancel()
+                            eventSources.remove(endpoint)
+                            
+                            // 触发重新连接事件
+                            publishConnectionStateEvent(
+                                eventSource = eventSource,
+                                state = ConnectionStateType.CONNECTING,
+                                endpoint = endpoint,
+                                message = "正在重新建立SSE连接"
+                            )
+                            
+                            // 等待退避时间
+                            Thread.sleep(backoffPeriod)
                             Unit
                         })
                     } catch (e: Exception) {
@@ -170,6 +198,7 @@ class ConnectionStateHandler(
      * 处理最终失败状态
      */
     private fun handleFinalFailure(eventSource: EventSource, endpoint: String, error: Throwable?) {
+        eventSources.remove(endpoint)
         connectionManager.updateState(endpoint, ConnectionStateType.FAILED)
         publishConnectionStateEvent(
             eventSource = eventSource,
