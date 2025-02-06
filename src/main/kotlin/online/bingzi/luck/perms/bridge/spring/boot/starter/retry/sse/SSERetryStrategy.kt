@@ -44,8 +44,19 @@ class SSERetryStrategy(
         return interval.toLong().coerceAtMost(maxInterval)
     }
 
-    override fun shouldRetry(exception: Throwable): Boolean {
-        return retryableExceptions[exception::class.java] ?: false
+    /**
+     * 检查是否应该重试
+     * 
+     * @param throwable 异常对象，可以为null（表示正常关闭）
+     * @return 如果应该重试返回true，否则返回false
+     */
+    override fun shouldRetry(throwable: Throwable?): Boolean {
+        // 如果异常为null（正常关闭），也应该重试
+        if (throwable == null) {
+            return true
+        }
+        // 检查是否是可重试的异常
+        return retryableExceptions[throwable::class.java] ?: false
     }
 
     /**
