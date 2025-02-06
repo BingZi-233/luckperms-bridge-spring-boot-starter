@@ -12,6 +12,7 @@ import online.bingzi.luck.perms.bridge.spring.boot.starter.aspect.PermissionAspe
 import online.bingzi.luck.perms.bridge.spring.boot.starter.listener.ConnectionStateHandler
 import online.bingzi.luck.perms.bridge.spring.boot.starter.listener.EventSourceFactory
 import online.bingzi.luck.perms.bridge.spring.boot.starter.manager.EventManager
+import online.bingzi.luck.perms.bridge.spring.boot.starter.retry.sse.SSERetryStrategy
 import online.bingzi.luck.perms.bridge.spring.boot.starter.service.ContextService
 import online.bingzi.luck.perms.bridge.spring.boot.starter.service.GroupService
 import online.bingzi.luck.perms.bridge.spring.boot.starter.service.PermissionService
@@ -54,6 +55,20 @@ class LuckPermsAutoConfiguration(
 ) {
 
     /**
+     * 配置SSE重试策略
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    fun sseRetryStrategy(): SSERetryStrategy {
+        return SSERetryStrategy(
+            maxAttempts = retryProperties.maxAttempts,
+            initialInterval = retryProperties.initialInterval,
+            multiplier = retryProperties.multiplier,
+            maxInterval = retryProperties.maxInterval
+        )
+    }
+
+    /**
      * 配置RetryTemplate
      */
     @Bean
@@ -80,9 +95,10 @@ class LuckPermsAutoConfiguration(
     fun eventSourceFactory(
         objectMapper: ObjectMapper,
         eventPublisher: ApplicationEventPublisher,
-        connectionStateHandler: ConnectionStateHandler
+        connectionStateHandler: ConnectionStateHandler,
+        retryStrategy: SSERetryStrategy
     ): EventSourceFactory {
-        return EventSourceFactory(objectMapper, eventPublisher, connectionStateHandler)
+        return EventSourceFactory(objectMapper, eventPublisher, connectionStateHandler, retryStrategy)
     }
 
     /**

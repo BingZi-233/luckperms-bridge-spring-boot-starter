@@ -5,6 +5,7 @@ import okhttp3.OkHttpClient
 import online.bingzi.luck.perms.bridge.spring.boot.starter.listener.ConnectionStateHandler
 import online.bingzi.luck.perms.bridge.spring.boot.starter.listener.EventSourceFactory
 import online.bingzi.luck.perms.bridge.spring.boot.starter.manager.EventManager
+import online.bingzi.luck.perms.bridge.spring.boot.starter.retry.sse.SSERetryStrategy
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.ApplicationEventPublisher
@@ -29,9 +30,10 @@ class EventConfiguration {
     fun eventSourceFactory(
         objectMapper: ObjectMapper,
         eventPublisher: ApplicationEventPublisher,
-        connectionStateHandler: ConnectionStateHandler
+        connectionStateHandler: ConnectionStateHandler,
+        retryStrategy: SSERetryStrategy
     ): EventSourceFactory {
-        return EventSourceFactory(objectMapper, eventPublisher, connectionStateHandler)
+        return EventSourceFactory(objectMapper, eventPublisher, connectionStateHandler, retryStrategy)
     }
 
     /**

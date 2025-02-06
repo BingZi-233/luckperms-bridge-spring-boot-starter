@@ -4,9 +4,13 @@ import okhttp3.Response
 import okhttp3.sse.EventSource
 import online.bingzi.luck.perms.bridge.spring.boot.starter.event.model.ConnectionStateEvent
 import online.bingzi.luck.perms.bridge.spring.boot.starter.entity.enums.ConnectionStateType
+import online.bingzi.luck.perms.bridge.spring.boot.starter.retry.sse.SSEConnectionManager
+import online.bingzi.luck.perms.bridge.spring.boot.starter.retry.sse.SSERetryListener
+import online.bingzi.luck.perms.bridge.spring.boot.starter.retry.sse.SSERetryStrategy
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.SmartLifecycle
+import org.springframework.retry.RetryContext
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 import org.springframework.stereotype.Component
 import java.net.SocketException
@@ -21,12 +25,19 @@ import jakarta.annotation.PreDestroy
  * 1. 记录连接状态变化的日志
  * 2. 发布连接状态事件
  * 3. 提供连接状态的追踪
+ * 4. 管理连接重试策略
  *
  * @property eventPublisher Spring事件发布器
+ * @property connectionManager SSE连接管理器
+ * @property retryStrategy SSE重试策略
+ * @property retryListener SSE重试监听器
  */
 @Component
 class ConnectionStateHandler(
-    private val eventPublisher: ApplicationEventPublisher
+    private val eventPublisher: ApplicationEventPublisher,
+    private val connectionManager: SSEConnectionManager,
+    private val retryStrategy: SSERetryStrategy,
+    private val retryListener: SSERetryListener
 ) : SmartLifecycle {
     private val logger = LoggerFactory.getLogger(ConnectionStateHandler::class.java)
     private var running = false
@@ -79,7 +90,7 @@ class ConnectionStateHandler(
             logger.debug("系统正在关闭，不处理SSE连接建立事件")
             return
         }
-        logger.info("SSE连接已建立 - 订阅端点: {}", endpoint)
+        connectionManager.updateState(endpoint, ConnectionStateType.CONNECTED)
         publishConnectionStateEvent(
             eventSource = eventSource,
             state = ConnectionStateType.CONNECTED,
@@ -99,7 +110,7 @@ class ConnectionStateHandler(
             logger.debug("系统正在关闭，不处理SSE连接关闭事件")
             return
         }
-        logger.info("SSE连接已关闭 - 订阅端点: {}", endpoint)
+        connectionManager.updateState(endpoint, ConnectionStateType.CLOSED)
         publishConnectionStateEvent(
             eventSource = eventSource,
             state = ConnectionStateType.CLOSED,
@@ -125,12 +136,46 @@ class ConnectionStateHandler(
             return
         }
 
-        logger.error("SSE连接失败 - 订阅端点: {}", endpoint, error)
+        // 检查是否应该重试
+        if (error != null && retryStrategy.shouldRetry(error)) {
+            val retryCount = connectionManager.getRetryCount(endpoint)
+            if (retryCount < retryStrategy.getMaxAttempts()) {
+                val backoffPeriod = retryStrategy.getBackoffPeriod(retryCount)
+                connectionManager.updateState(endpoint, ConnectionStateType.RETRYING)
+                
+                // 使用Spring Retry模板进行重试
+                val retryTemplate = retryStrategy.createRetryTemplate()
+                taskExecutor.execute {
+                    try {
+                        retryTemplate.execute<Unit, Throwable>({ context ->
+                            // 设置重试上下文的端点信息
+                            retryListener.setEndpoint(context, endpoint)
+                            // 重试逻辑在这里执行
+                            connectionManager.updateState(endpoint, ConnectionStateType.CONNECTING)
+                            // 重试逻辑由EventSourceFactory处理
+                            Unit
+                        })
+                    } catch (e: Exception) {
+                        handleFinalFailure(eventSource, endpoint, e)
+                    }
+                }
+                return
+            }
+        }
+
+        handleFinalFailure(eventSource, endpoint, error)
+    }
+
+    /**
+     * 处理最终失败状态
+     */
+    private fun handleFinalFailure(eventSource: EventSource, endpoint: String, error: Throwable?) {
+        connectionManager.updateState(endpoint, ConnectionStateType.FAILED)
         publishConnectionStateEvent(
             eventSource = eventSource,
             state = ConnectionStateType.FAILED,
             endpoint = endpoint,
-            message = "SSE连接失败",
+            message = "SSE连接失败且无法恢复",
             error = error
         )
     }

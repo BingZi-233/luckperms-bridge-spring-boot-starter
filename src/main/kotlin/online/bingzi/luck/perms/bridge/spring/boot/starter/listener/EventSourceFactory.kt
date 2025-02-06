@@ -5,8 +5,10 @@ import okhttp3.Response
 import okhttp3.sse.EventSource
 import okhttp3.sse.EventSourceListener
 import online.bingzi.luck.perms.bridge.spring.boot.starter.event.model.*
+import online.bingzi.luck.perms.bridge.spring.boot.starter.retry.sse.SSERetryStrategy
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationEventPublisher
+import org.springframework.retry.support.RetryTemplate
 
 /**
  * SSE事件源工厂
@@ -15,17 +17,21 @@ import org.springframework.context.ApplicationEventPublisher
  * 1. 创建事件监听器
  * 2. 解析接收到的事件数据
  * 3. 将原始事件数据转换为对应的事件对象
+ * 4. 管理重试机制
  *
  * @property objectMapper JSON解析器，用于解析事件数据
  * @property eventPublisher Spring事件发布器，用于发布解析后的事件
  * @property connectionStateHandler 连接状态处理器，用于处理SSE连接的状态变化
+ * @property retryStrategy SSE重试策略，用于管理连接重试
  */
 class EventSourceFactory(
     private val objectMapper: ObjectMapper,
     private val eventPublisher: ApplicationEventPublisher,
-    private val connectionStateHandler: ConnectionStateHandler
+    private val connectionStateHandler: ConnectionStateHandler,
+    private val retryStrategy: SSERetryStrategy
 ) {
     private val logger = LoggerFactory.getLogger(EventSourceFactory::class.java)
+    private val retryTemplate: RetryTemplate by lazy { retryStrategy.createRetryTemplate() }
 
     /**
      * 创建SSE事件监听器
@@ -45,7 +51,9 @@ class EventSourceFactory(
     fun createListener(endpoint: String): EventSourceListener {
         return object : EventSourceListener() {
             override fun onOpen(eventSource: EventSource, response: Response) {
-                connectionStateHandler.handleConnectionOpen(eventSource, response, endpoint)
+                retryTemplate.execute<Unit, Throwable> {
+                    connectionStateHandler.handleConnectionOpen(eventSource, response, endpoint)
+                }
             }
 
             override fun onEvent(eventSource: EventSource, id: String?, type: String?, data: String) {
@@ -106,18 +114,24 @@ class EventSourceFactory(
                             return
                         }
                     }
-                    eventPublisher.publishEvent(event)
+                    retryTemplate.execute<Unit, Throwable> {
+                        eventPublisher.publishEvent(event)
+                    }
                 } catch (e: Exception) {
                     logger.error("处理事件时发生错误 - 订阅端点: {}", endpoint, e)
                 }
             }
 
             override fun onClosed(eventSource: EventSource) {
-                connectionStateHandler.handleConnectionClosed(eventSource, endpoint)
+                retryTemplate.execute<Unit, Throwable> {
+                    connectionStateHandler.handleConnectionClosed(eventSource, endpoint)
+                }
             }
 
             override fun onFailure(eventSource: EventSource, t: Throwable?, response: Response?) {
-                connectionStateHandler.handleConnectionFailure(eventSource, endpoint, t)
+                retryTemplate.execute<Unit, Throwable> {
+                    connectionStateHandler.handleConnectionFailure(eventSource, endpoint, t)
+                }
             }
         }
     }
