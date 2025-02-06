@@ -51,5 +51,11 @@ enum class ConnectionStateType {
      * 未知
      * 表示SSE连接状态无法确定
      */
-    UNKNOWN
+    UNKNOWN;
+
+    /**
+     * 检查是否处于已连接状态
+     * 只有CONNECTED状态被认为是已连接
+     */
+    fun isConnected(): Boolean = this == CONNECTED
 } 
