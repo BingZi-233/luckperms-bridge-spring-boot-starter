@@ -14,12 +14,28 @@ import jakarta.validation.constraints.NotEmpty
  * @property description 操作描述，详细说明具体的操作内容
  */
 data class Action(
+    /**
+     * 操作时间戳，表示该操作发生的时间。
+     * 默认值为当前时间的Unix时间戳（单位：秒）。
+     */
     val timestamp: Long = System.currentTimeMillis() / 1000,
     
+    /**
+     * 操作来源，表示执行该操作的实体信息。
+     * 该属性用于追踪操作的发起者，通常是用户或系统。
+     */
     val source: ActionSource,
     
+    /**
+     * 操作目标，表示被操作的实体信息。
+     * 该属性用于识别权限变更的对象，例如用户、组或其他资源。
+     */
     val target: ActionTarget,
     
+    /**
+     * 操作描述，详细说明具体的操作内容。
+     * 该属性为非空字段，必须提供操作的具体描述信息。
+     */
     @field:NotEmpty
     val description: String
 )

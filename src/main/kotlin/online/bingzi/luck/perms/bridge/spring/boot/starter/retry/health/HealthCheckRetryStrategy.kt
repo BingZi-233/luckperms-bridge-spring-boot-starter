@@ -14,12 +14,13 @@ import kotlin.math.pow
 
 /**
  * 健康检查专用重试策略
- * 针对健康检查的特殊性进行优化
+ * 该类实现了 RetryStrategy 接口，针对健康检查的特殊性进行优化
+ * 提供重试机制，处理健康检查过程中可能出现的异常
  *
- * @param maxAttempts 最大重试次数
- * @param initialInterval 初始重试间隔（毫秒）
- * @param multiplier 间隔时间乘数
- * @param maxInterval 最大重试间隔（毫秒）
+ * @param maxAttempts 最大重试次数，默认为3
+ * @param initialInterval 初始重试间隔（毫秒），默认为1000毫秒
+ * @param multiplier 间隔时间乘数，默认为2.0
+ * @param maxInterval 最大重试间隔（毫秒），默认为30000毫秒
  */
 class HealthCheckRetryStrategy(
     private val maxAttempts: Int = 3,
@@ -28,19 +29,33 @@ class HealthCheckRetryStrategy(
     private val maxInterval: Long = 30000
 ) : RetryStrategy {
 
-    // 健康检查相关的可重试异常
+    // 健康检查相关的可重试异常映射，异常类型与是否可重试的标志
     private val retryableExceptions: Map<Class<out Throwable>, Boolean> = mapOf(
-        IOException::class.java to true,
-        SocketException::class.java to true,
-        SocketTimeoutException::class.java to true,
-        SSLException::class.java to true,
-        ConnectException::class.java to true
+        IOException::class.java to true,           // IO异常可重试
+        SocketException::class.java to true,       // 套接字异常可重试
+        SocketTimeoutException::class.java to true, // 套接字超时异常可重试
+        SSLException::class.java to true,          // SSL异常可重试
+        ConnectException::class.java to true       // 连接异常可重试
     )
 
+    /**
+     * 获取最大重试次数
+     * 
+     * @return 返回最大重试次数
+     */
     override fun getMaxAttempts(): Int = maxAttempts
 
+    /**
+     * 计算退避期间
+     * 根据当前重试次数计算下一次重试的时间间隔
+     * 
+     * @param retryCount 当前重试次数
+     * @return 返回计算后的退避时间（毫秒）
+     */
     override fun getBackoffPeriod(retryCount: Int): Long {
+        // 计算当前重试次数对应的间隔时间
         val interval = initialInterval * multiplier.pow(retryCount.toDouble())
+        // 返回不超过最大间隔的实际时间
         return interval.toLong().coerceAtMost(maxInterval)
     }
 
@@ -55,12 +70,15 @@ class HealthCheckRetryStrategy(
         if (exception == null) {
             return false
         }
-        // 检查是否是可重试的异常
+        // 检查该异常是否在可重试的异常列表中
         return retryableExceptions[exception::class.java] ?: false
     }
 
     /**
-     * 创建健康检查专用的RetryTemplate
+     * 创建健康检查专用的 RetryTemplate
+     * 该方法配置重试策略和退避策略，返回一个配置好的 RetryTemplate 对象
+     * 
+     * @return 返回配置好的 RetryTemplate
      */
     fun createRetryTemplate(): RetryTemplate {
         val retryTemplate = RetryTemplate()
@@ -78,4 +96,4 @@ class HealthCheckRetryStrategy(
         
         return retryTemplate
     }
-} 
+}
