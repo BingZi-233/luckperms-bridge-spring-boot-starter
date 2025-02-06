@@ -7,7 +7,9 @@ import org.springframework.retry.policy.SimpleRetryPolicy
 import org.springframework.retry.support.RetryTemplate
 import java.io.IOException
 import java.net.ConnectException
+import java.net.SocketException
 import java.net.SocketTimeoutException
+import javax.net.ssl.SSLException
 import kotlin.math.pow
 
 /**
@@ -21,16 +23,18 @@ import kotlin.math.pow
  */
 class HealthCheckRetryStrategy(
     private val maxAttempts: Int = 3,
-    private val initialInterval: Long = 2000,
+    private val initialInterval: Long = 1000,
     private val multiplier: Double = 2.0,
-    private val maxInterval: Long = 10000
+    private val maxInterval: Long = 30000
 ) : RetryStrategy {
 
     // 健康检查相关的可重试异常
     private val retryableExceptions: Map<Class<out Throwable>, Boolean> = mapOf(
         IOException::class.java to true,
-        ConnectException::class.java to true,
-        SocketTimeoutException::class.java to true
+        SocketException::class.java to true,
+        SocketTimeoutException::class.java to true,
+        SSLException::class.java to true,
+        ConnectException::class.java to true
     )
 
     override fun getMaxAttempts(): Int = maxAttempts
@@ -40,7 +44,18 @@ class HealthCheckRetryStrategy(
         return interval.toLong().coerceAtMost(maxInterval)
     }
 
-    override fun shouldRetry(exception: Throwable): Boolean {
+    /**
+     * 检查是否应该重试
+     * 
+     * @param exception 异常对象，可以为null（表示正常关闭）
+     * @return 如果应该重试返回true，否则返回false
+     */
+    override fun shouldRetry(exception: Throwable?): Boolean {
+        // 如果异常为null，不进行重试
+        if (exception == null) {
+            return false
+        }
+        // 检查是否是可重试的异常
         return retryableExceptions[exception::class.java] ?: false
     }
 

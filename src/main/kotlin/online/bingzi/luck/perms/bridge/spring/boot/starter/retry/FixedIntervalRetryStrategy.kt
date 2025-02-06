@@ -1,41 +1,29 @@
 package online.bingzi.luck.perms.bridge.spring.boot.starter.retry
 
-import org.springframework.retry.RetryPolicy
-import org.springframework.retry.policy.SimpleRetryPolicy
-import org.springframework.retry.support.RetryTemplate
-
 /**
- * 固定间隔重试策略实现
+ * 固定间隔重试策略
+ * 每次重试的间隔时间都是固定的
+ *
  * @param maxAttempts 最大重试次数
- * @param backoffPeriod 重试间隔时间（毫秒）
- * @param retryableExceptions 可重试的异常类型
+ * @param interval 重试间隔（毫秒）
  */
 class FixedIntervalRetryStrategy(
     private val maxAttempts: Int = 3,
-    private val backoffPeriod: Long = 1000,
-    private val retryableExceptions: Map<Class<out Throwable>, Boolean> = mapOf(
-        Exception::class.java to true
-    )
+    private val interval: Long = 1000
 ) : RetryStrategy {
 
     override fun getMaxAttempts(): Int = maxAttempts
 
-    override fun getBackoffPeriod(retryCount: Int): Long = backoffPeriod
-
-    override fun shouldRetry(exception: Throwable): Boolean {
-        return retryableExceptions[exception::class.java] ?: false
-    }
+    override fun getBackoffPeriod(retryCount: Int): Long = interval
 
     /**
-     * 创建Spring Retry的RetryTemplate
+     * 检查是否应该重试
+     * 
+     * @param exception 异常对象，可以为null（表示正常关闭）
+     * @return 如果应该重试返回true，否则返回false
      */
-    fun createRetryTemplate(): RetryTemplate {
-        val retryTemplate = RetryTemplate()
-        
-        // 设置重试策略
-        val retryPolicy: RetryPolicy = SimpleRetryPolicy(maxAttempts, retryableExceptions)
-        retryTemplate.setRetryPolicy(retryPolicy)
-        
-        return retryTemplate
+    override fun shouldRetry(exception: Throwable?): Boolean {
+        // 默认情况下，只要没有达到最大重试次数就继续重试
+        return true
     }
 } 
