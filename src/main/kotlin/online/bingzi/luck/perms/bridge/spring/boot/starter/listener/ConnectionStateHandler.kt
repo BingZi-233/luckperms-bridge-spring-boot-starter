@@ -131,6 +131,9 @@ class ConnectionStateHandler(
             endpoint = endpoint,
             message = "SSE连接已关闭"
         )
+
+        // 触发重连机制
+        initiateRetry(eventSource, endpoint, null)
     }
 
     /**
@@ -150,8 +153,16 @@ class ConnectionStateHandler(
             return
         }
 
+        // 触发重连机制
+        initiateRetry(eventSource, endpoint, error)
+    }
+
+    /**
+     * 启动重试机制
+     */
+    private fun initiateRetry(eventSource: EventSource, endpoint: String, error: Throwable?) {
         // 检查是否应该重试
-        if (error != null && retryStrategy.shouldRetry(error)) {
+        if (retryStrategy.shouldRetry(error)) {
             val retryCount = connectionManager.getRetryCount(endpoint)
             if (retryCount < retryStrategy.getMaxAttempts()) {
                 val backoffPeriod = retryStrategy.getBackoffPeriod(retryCount)
