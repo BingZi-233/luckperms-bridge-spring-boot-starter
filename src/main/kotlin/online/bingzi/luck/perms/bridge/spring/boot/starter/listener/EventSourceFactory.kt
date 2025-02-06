@@ -1,6 +1,8 @@
 package online.bingzi.luck.perms.bridge.spring.boot.starter.listener
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import okhttp3.Response
 import okhttp3.sse.EventSource
 import okhttp3.sse.EventSourceListener
@@ -9,6 +11,9 @@ import online.bingzi.luck.perms.bridge.spring.boot.starter.retry.sse.SSERetryStr
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.retry.support.RetryTemplate
+import okhttp3.sse.EventSources
+import org.springframework.beans.factory.annotation.Qualifier
+import online.bingzi.luck.perms.bridge.spring.boot.starter.config.EventSourceConfig
 
 /**
  * SSE事件源工厂
@@ -21,17 +26,45 @@ import org.springframework.retry.support.RetryTemplate
  *
  * @property objectMapper JSON解析器，用于解析事件数据
  * @property eventPublisher Spring事件发布器，用于发布解析后的事件
- * @property connectionStateHandler 连接状态处理器，用于处理SSE连接的状态变化
+ * @property connectionStateProcessor 连接状态处理器，用于处理SSE连接的状态变化
  * @property retryStrategy SSE重试策略，用于管理连接重试
+ * @property okHttpClient OkHttpClient实例，用于创建新的EventSource实例
+ * @property eventSourceConfig EventSource配置，用于创建新的EventSource实例
  */
 class EventSourceFactory(
     private val objectMapper: ObjectMapper,
     private val eventPublisher: ApplicationEventPublisher,
-    private val connectionStateHandler: ConnectionStateHandler,
-    private val retryStrategy: SSERetryStrategy
+    private val connectionStateProcessor: ConnectionStateProcessor,
+    private val retryStrategy: SSERetryStrategy,
+    @Qualifier("sseOkHttpClient") private val okHttpClient: OkHttpClient,
+    private val eventSourceConfig: EventSourceConfig
 ) {
     private val logger = LoggerFactory.getLogger(EventSourceFactory::class.java)
     private val retryTemplate: RetryTemplate by lazy { retryStrategy.createRetryTemplate() }
+    private val eventSources = mutableMapOf<String, EventSource>()
+
+    /**
+     * 创建新的EventSource实例
+     *
+     * @param endpoint SSE端点URL
+     * @return 新创建的EventSource实例
+     */
+    fun createEventSource(endpoint: String): EventSource {
+        // 关闭旧的连接
+        eventSources[endpoint]?.cancel()
+        eventSources.remove(endpoint)
+
+        val request = Request.Builder()
+            .url(endpoint)
+            .header("Accept", "text/event-stream")
+            .build()
+
+        val newEventSource = EventSources.createFactory(okHttpClient)
+            .newEventSource(request, createListener(endpoint))
+        
+        eventSources[endpoint] = newEventSource
+        return newEventSource
+    }
 
     /**
      * 创建SSE事件监听器
@@ -52,7 +85,7 @@ class EventSourceFactory(
         return object : EventSourceListener() {
             override fun onOpen(eventSource: EventSource, response: Response) {
                 retryTemplate.execute<Unit, Throwable> {
-                    connectionStateHandler.handleConnectionOpen(eventSource, response, endpoint)
+                    connectionStateProcessor.handleConnectionOpen(eventSource, response, endpoint)
                 }
             }
 
@@ -124,13 +157,13 @@ class EventSourceFactory(
 
             override fun onClosed(eventSource: EventSource) {
                 retryTemplate.execute<Unit, Throwable> {
-                    connectionStateHandler.handleConnectionClosed(eventSource, endpoint)
+                    connectionStateProcessor.handleConnectionClosed(eventSource, endpoint)
                 }
             }
 
             override fun onFailure(eventSource: EventSource, t: Throwable?, response: Response?) {
                 retryTemplate.execute<Unit, Throwable> {
-                    connectionStateHandler.handleConnectionFailure(eventSource, endpoint, t)
+                    connectionStateProcessor.handleConnectionFailure(eventSource, endpoint, t)
                 }
             }
         }

@@ -2,6 +2,22 @@
 
 本项目遵循 [语义化版本 2.0.0](https://semver.org/lang/zh-CN/) 规范。
 
+## [1.0.18-alpha1]
+
+### 修复
+- 修复了SSE连接断开后无法自动重连的问题
+- 修复了Spring Bean循环依赖的问题
+
+### 重构
+- 重构了SSE连接状态管理逻辑，引入了`ConnectionStateProcessor`接口
+- 优化了重试机制的实现
+- 添加了SSE重连事件通知机制
+
+### 新增
+- 添加了`EventSourceConfig`配置类，用于管理SSE连接参数
+- 添加了专门的SSE OkHttpClient配置
+- 添加了`SSERetryEvent`事件类，用于通知重连事件
+
 ## [1.0.17]
 
 ### [1.0.17-alpha3]

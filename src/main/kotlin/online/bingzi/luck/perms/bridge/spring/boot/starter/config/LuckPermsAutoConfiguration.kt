@@ -9,7 +9,7 @@ import online.bingzi.luck.perms.bridge.spring.boot.starter.api.UserApi
 import online.bingzi.luck.perms.bridge.spring.boot.starter.aspect.ContextAspect
 import online.bingzi.luck.perms.bridge.spring.boot.starter.aspect.GroupAspect
 import online.bingzi.luck.perms.bridge.spring.boot.starter.aspect.PermissionAspect
-import online.bingzi.luck.perms.bridge.spring.boot.starter.listener.ConnectionStateHandler
+import online.bingzi.luck.perms.bridge.spring.boot.starter.listener.ConnectionStateProcessor
 import online.bingzi.luck.perms.bridge.spring.boot.starter.listener.EventSourceFactory
 import online.bingzi.luck.perms.bridge.spring.boot.starter.manager.EventManager
 import online.bingzi.luck.perms.bridge.spring.boot.starter.retry.sse.SSERetryStrategy
@@ -21,15 +21,12 @@ import online.bingzi.luck.perms.bridge.spring.boot.starter.service.impl.DefaultU
 import online.bingzi.luck.perms.bridge.spring.boot.starter.service.impl.LuckPermsContextService
 import online.bingzi.luck.perms.bridge.spring.boot.starter.service.impl.LuckPermsGroupService
 import online.bingzi.luck.perms.bridge.spring.boot.starter.service.impl.LuckPermsPermissionService
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationEventPublisher
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.ComponentScan
-import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.EnableAspectJAutoProxy
-import org.springframework.context.annotation.Import
+import org.springframework.context.annotation.*
 import org.springframework.retry.annotation.EnableRetry
 import org.springframework.retry.annotation.RetryConfiguration
 import org.springframework.retry.backoff.ExponentialBackOffPolicy
@@ -45,13 +42,14 @@ import java.util.concurrent.TimeUnit
 @Configuration
 @EnableAspectJAutoProxy
 @EnableRetry
-@EnableConfigurationProperties(LuckPermsProperties::class, RetryProperties::class, HealthCheckProperties::class)
+@EnableConfigurationProperties(LuckPermsProperties::class, RetryProperties::class, HealthCheckProperties::class, EventSourceConfig::class)
 @ComponentScan("online.bingzi.luck.perms.bridge.spring.boot.starter")
 @Import(RetryConfiguration::class)
 @ConditionalOnProperty(prefix = "luck-perms", name = ["enabled"], matchIfMissing = true)
 class LuckPermsAutoConfiguration(
     private val properties: LuckPermsProperties,
-    private val retryProperties: RetryProperties
+    private val retryProperties: RetryProperties,
+    private val eventSourceConfig: EventSourceConfig
 ) {
 
     /**
@@ -95,10 +93,19 @@ class LuckPermsAutoConfiguration(
     fun eventSourceFactory(
         objectMapper: ObjectMapper,
         eventPublisher: ApplicationEventPublisher,
-        connectionStateHandler: ConnectionStateHandler,
-        retryStrategy: SSERetryStrategy
+        connectionStateHandler: ConnectionStateProcessor,
+        retryStrategy: SSERetryStrategy,
+        @Qualifier("sseOkHttpClient") okHttpClient: OkHttpClient,
+        eventSourceConfig: EventSourceConfig
     ): EventSourceFactory {
-        return EventSourceFactory(objectMapper, eventPublisher, connectionStateHandler, retryStrategy)
+        return EventSourceFactory(
+            objectMapper,
+            eventPublisher,
+            connectionStateHandler,
+            retryStrategy,
+            okHttpClient,
+            eventSourceConfig
+        )
     }
 
     /**
@@ -136,6 +143,27 @@ class LuckPermsAutoConfiguration(
             .connectTimeout(5000, TimeUnit.MILLISECONDS)
             .readTimeout(5000, TimeUnit.MILLISECONDS)
             .writeTimeout(5000, TimeUnit.MILLISECONDS)
+            .addInterceptor { chain ->
+                val request = chain.request().newBuilder()
+                    .addHeader("Authorization", properties.apiKey)
+                    .build()
+                chain.proceed(request)
+            }
+            .addInterceptor(loggingInterceptor)
+            .build()
+    }
+
+    @Bean
+    @Qualifier("sseOkHttpClient")
+    fun sseOkHttpClient(): OkHttpClient {
+        val loggingInterceptor = HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BASIC
+        }
+
+        return OkHttpClient.Builder()
+            .connectTimeout(eventSourceConfig.connectTimeout, TimeUnit.MILLISECONDS)
+            .readTimeout(eventSourceConfig.readTimeout, TimeUnit.MILLISECONDS)
+            .writeTimeout(eventSourceConfig.writeTimeout, TimeUnit.MILLISECONDS)
             .addInterceptor { chain ->
                 val request = chain.request().newBuilder()
                     .addHeader("Authorization", properties.apiKey)

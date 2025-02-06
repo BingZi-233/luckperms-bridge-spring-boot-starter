@@ -1,21 +1,26 @@
 package online.bingzi.luck.perms.bridge.spring.boot.starter.listener
 
+import jakarta.annotation.PostConstruct
+import jakarta.annotation.PreDestroy
+import okhttp3.Request
 import okhttp3.Response
 import okhttp3.sse.EventSource
-import online.bingzi.luck.perms.bridge.spring.boot.starter.event.model.ConnectionStateEvent
+import okhttp3.sse.EventSourceListener
 import online.bingzi.luck.perms.bridge.spring.boot.starter.entity.enums.ConnectionStateType
+import online.bingzi.luck.perms.bridge.spring.boot.starter.event.model.ConnectionStateEvent
+import online.bingzi.luck.perms.bridge.spring.boot.starter.event.model.SSERetryEvent
 import online.bingzi.luck.perms.bridge.spring.boot.starter.retry.sse.SSEConnectionManager
 import online.bingzi.luck.perms.bridge.spring.boot.starter.retry.sse.SSERetryListener
 import online.bingzi.luck.perms.bridge.spring.boot.starter.retry.sse.SSERetryStrategy
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.context.SmartLifecycle
-import org.springframework.retry.RetryContext
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 import org.springframework.stereotype.Component
 import java.net.SocketException
-import jakarta.annotation.PostConstruct
-import jakarta.annotation.PreDestroy
+import okhttp3.OkHttpClient
+import okhttp3.sse.EventSources
+import org.springframework.beans.factory.annotation.Qualifier
 
 /**
  * SSE连接状态处理器
@@ -31,14 +36,16 @@ import jakarta.annotation.PreDestroy
  * @property connectionManager SSE连接管理器
  * @property retryStrategy SSE重试策略
  * @property retryListener SSE重试监听器
+ * @property okHttpClient SSE客户端
  */
 @Component
 class ConnectionStateHandler(
     private val eventPublisher: ApplicationEventPublisher,
     private val connectionManager: SSEConnectionManager,
     private val retryStrategy: SSERetryStrategy,
-    private val retryListener: SSERetryListener
-) : SmartLifecycle {
+    private val retryListener: SSERetryListener,
+    @Qualifier("sseOkHttpClient") private val okHttpClient: OkHttpClient
+) : SmartLifecycle, ConnectionStateProcessor {
     private val logger = LoggerFactory.getLogger(ConnectionStateHandler::class.java)
     private var running = false
     private val taskExecutor: ThreadPoolTaskExecutor by lazy {
@@ -97,7 +104,7 @@ class ConnectionStateHandler(
      * @param response HTTP响应对象
      * @param endpoint 连接的目标端点
      */
-    fun handleConnectionOpen(eventSource: EventSource, response: Response, endpoint: String) {
+    override fun handleConnectionOpen(eventSource: EventSource, response: Response, endpoint: String) {
         if (!running) {
             logger.debug("系统正在关闭，不处理SSE连接建立事件")
             return
@@ -118,7 +125,7 @@ class ConnectionStateHandler(
      * @param eventSource SSE事件源
      * @param endpoint 连接的目标端点
      */
-    fun handleConnectionClosed(eventSource: EventSource, endpoint: String) {
+    override fun handleConnectionClosed(eventSource: EventSource, endpoint: String) {
         if (!running) {
             logger.debug("系统正在关闭，不处理SSE连接关闭事件")
             return
@@ -143,7 +150,7 @@ class ConnectionStateHandler(
      * @param endpoint 连接的目标端点
      * @param error 导致失败的异常对象
      */
-    fun handleConnectionFailure(eventSource: EventSource, endpoint: String, error: Throwable?) {
+    override fun handleConnectionFailure(eventSource: EventSource, endpoint: String, error: Throwable?) {
         if (!running) {
             if (error is SocketException && error.message?.contains("Socket closed") == true) {
                 logger.debug("系统正在关闭，SSE连接正常关闭")
@@ -192,6 +199,30 @@ class ConnectionStateHandler(
                             
                             // 等待退避时间
                             Thread.sleep(backoffPeriod)
+
+                            // 发布重连事件
+                            eventPublisher.publishEvent(
+                                SSERetryEvent(
+                                    source = eventSource,
+                                    endpoint = endpoint,
+                                    retryCount = retryCount
+                                )
+                            )
+
+                            // 等待一段时间，确保旧连接完全关闭
+                            Thread.sleep(1000)
+
+                            // 创建新的EventSource
+                            val request = Request.Builder()
+                                .url(endpoint)
+                                .header("Accept", "text/event-stream")
+                                .build()
+
+                            val newEventSource = EventSources.createFactory(okHttpClient)
+                                .newEventSource(request, createListener(endpoint))
+
+                            eventSources[endpoint] = newEventSource
+                            
                             Unit
                         })
                     } catch (e: Exception) {
@@ -203,6 +234,33 @@ class ConnectionStateHandler(
         }
 
         handleFinalFailure(eventSource, endpoint, error)
+    }
+
+    /**
+     * 创建事件监听器
+     */
+    private fun createListener(endpoint: String): EventSourceListener {
+        return object : EventSourceListener() {
+            override fun onOpen(eventSource: EventSource, response: Response) {
+                handleConnectionOpen(eventSource, response, endpoint)
+            }
+
+            override fun onEvent(eventSource: EventSource, id: String?, type: String?, data: String) {
+                // 忽略ping事件
+                if (type == "ping") {
+                    return
+                }
+                logger.debug("收到SSE事件 - 类型: {}, 数据: {}", type, data)
+            }
+
+            override fun onClosed(eventSource: EventSource) {
+                handleConnectionClosed(eventSource, endpoint)
+            }
+
+            override fun onFailure(eventSource: EventSource, t: Throwable?, response: Response?) {
+                handleConnectionFailure(eventSource, endpoint, t)
+            }
+        }
     }
 
     /**

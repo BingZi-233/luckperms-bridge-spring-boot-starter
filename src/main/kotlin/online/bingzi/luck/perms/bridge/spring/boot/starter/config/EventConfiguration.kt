@@ -13,6 +13,9 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.retry.support.RetryTemplate
 import retrofit2.Retrofit
+import org.springframework.beans.factory.annotation.Qualifier
+import online.bingzi.luck.perms.bridge.spring.boot.starter.config.EventSourceConfig
+import online.bingzi.luck.perms.bridge.spring.boot.starter.listener.ConnectionStateProcessor
 
 /**
  * 事件配置类
@@ -30,10 +33,19 @@ class EventConfiguration {
     fun eventSourceFactory(
         objectMapper: ObjectMapper,
         eventPublisher: ApplicationEventPublisher,
-        connectionStateHandler: ConnectionStateHandler,
-        retryStrategy: SSERetryStrategy
+        connectionStateHandler: ConnectionStateProcessor,
+        retryStrategy: SSERetryStrategy,
+        @Qualifier("sseOkHttpClient") okHttpClient: OkHttpClient,
+        eventSourceConfig: EventSourceConfig
     ): EventSourceFactory {
-        return EventSourceFactory(objectMapper, eventPublisher, connectionStateHandler, retryStrategy)
+        return EventSourceFactory(
+            objectMapper,
+            eventPublisher,
+            connectionStateHandler,
+            retryStrategy,
+            okHttpClient,
+            eventSourceConfig
+        )
     }
 
     /**

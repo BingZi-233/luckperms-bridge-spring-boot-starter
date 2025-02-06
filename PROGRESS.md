@@ -259,4 +259,21 @@
 - [ ] 权限缓存
 - [ ] 批量操作优化
 - [ ] 异步操作支持
-- [ ] 文档完善 
+- [ ] 文档完善
+
+## SSE连接管理优化
+
+- [x] 重构SSE连接状态管理
+  - [x] 创建`ConnectionStateProcessor`接口
+  - [x] 优化`ConnectionStateHandler`实现
+  - [x] 添加SSE重连事件机制
+
+- [x] 优化SSE配置管理
+  - [x] 添加`EventSourceConfig`配置类
+  - [x] 配置专门的SSE OkHttpClient
+  - [x] 优化超时和重试参数
+
+- [x] 修复问题
+  - [x] 修复SSE连接断开后无法自动重连的问题
+  - [x] 解决Spring Bean循环依赖问题
+  - [x] 优化重试逻辑实现 
