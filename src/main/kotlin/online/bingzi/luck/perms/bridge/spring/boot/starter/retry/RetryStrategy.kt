@@ -18,7 +18,8 @@ interface RetryStrategy {
 
     /**
      * 判断是否应该重试
-     * @param exception 导致失败的异常
+     * @param exception 导致失败的异常，可以为null（表示正常关闭）
+     * @return 如果应该重试返回true，否则返回false
      */
-    fun shouldRetry(exception: Throwable): Boolean
+    fun shouldRetry(exception: Throwable?): Boolean
 } 
