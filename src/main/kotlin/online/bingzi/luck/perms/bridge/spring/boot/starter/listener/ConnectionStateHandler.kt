@@ -21,6 +21,9 @@ import org.springframework.context.SmartLifecycle
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 import org.springframework.stereotype.Component
 import java.net.SocketException
+import java.util.concurrent.ConcurrentHashMap
+import org.springframework.retry.RetryCallback
+import org.springframework.retry.RetryContext
 
 /**
  * SSE连接状态处理器
@@ -59,7 +62,32 @@ class ConnectionStateHandler(
     }
 
     // 存储每个端点对应的EventSource
-    private val eventSources = mutableMapOf<String, EventSource>()
+    private val eventSources = ConcurrentHashMap<String, EventSource>()
+    private val requestHeaders = ConcurrentHashMap<String, Map<String, String>>()
+
+    /**
+     * 保存请求头信息
+     * 用于在重连时恢复认证等信息
+     *
+     * @param endpoint 连接的端点
+     * @param headers 请求头信息
+     */
+    private fun saveRequestHeaders(endpoint: String, response: Response) {
+        val headers = response.request.headers.toMultimap()
+            .mapValues { it.value.firstOrNull() ?: "" }
+            .filter { it.key.equals("Authorization", ignoreCase = true) }
+        requestHeaders[endpoint] = headers
+    }
+
+    /**
+     * 获取保存的请求头信息
+     *
+     * @param endpoint 连接的端点
+     * @return 请求头信息
+     */
+    private fun getSavedHeaders(endpoint: String): Map<String, String> {
+        return requestHeaders[endpoint] ?: emptyMap()
+    }
 
     /**
      * 初始化方法，在Bean创建后执行
@@ -119,6 +147,8 @@ class ConnectionStateHandler(
             return
         }
         eventSources[endpoint] = eventSource // 存储当前连接的EventSource
+        // 保存请求头信息，用于重连时恢复
+        saveRequestHeaders(endpoint, response)
         connectionManager.updateState(endpoint, ConnectionStateType.CONNECTED) // 更新连接状态为已连接
         publishConnectionStateEvent(
             eventSource = eventSource,
@@ -182,70 +212,48 @@ class ConnectionStateHandler(
      * @param error 可选的错误信息，表示连接失败的原因
      */
     private fun initiateRetry(eventSource: EventSource, endpoint: String, error: Throwable?) {
-        // 检查是否应该重试
-        if (retryStrategy.shouldRetry(error)) {
-            val retryCount = connectionManager.getRetryCount(endpoint) // 获取当前重试次数
-            if (retryCount < retryStrategy.getMaxAttempts()) { // 检查是否超过最大重试次数
-                val backoffPeriod = retryStrategy.getBackoffPeriod(retryCount) // 计算退避时间
-                connectionManager.updateState(endpoint, ConnectionStateType.RETRYING) // 更新状态为重试中
-                
-                // 使用Spring Retry模板进行重试
+        if (!running) return
+
+        taskExecutor.execute {
+            try {
                 val retryTemplate = retryStrategy.createRetryTemplate()
-                taskExecutor.execute { // 在任务执行器中执行重试逻辑
-                    try {
-                        retryTemplate.execute<Unit, Throwable> { context ->
-                            // 设置重试上下文的端点信息
-                            retryListener.setEndpoint(context, endpoint)
-                            // 更新状态为正在连接
-                            connectionManager.updateState(endpoint, ConnectionStateType.CONNECTING)
+                retryTemplate.registerListener(retryListener)
 
-                            // 关闭旧的连接
-                            eventSources[endpoint]?.cancel() // 取消旧的EventSource连接
-                            eventSources.remove(endpoint) // 移除旧的连接
+                retryTemplate.execute(object : RetryCallback<Unit, Exception> {
+                    override fun doWithRetry(context: RetryContext): Unit {
+                        retryListener.setEndpoint(context, endpoint)
+                        connectionManager.updateState(endpoint, ConnectionStateType.RETRYING)
+                        eventPublisher.publishEvent(SSERetryEvent(eventSource, endpoint, connectionManager.getRetryCount(endpoint)))
 
-                            // 触发重新连接事件
-                            publishConnectionStateEvent(
-                                eventSource = eventSource,
-                                state = ConnectionStateType.CONNECTING,
-                                endpoint = endpoint,
-                                message = "正在重新建立SSE连接" // 发布重连事件
-                            )
+                        // 创建新的请求，并添加之前保存的认证头
+                        val savedHeaders = getSavedHeaders(endpoint)
+                        val request = Request.Builder()
+                            .url(endpoint)
+                            .apply {
+                                savedHeaders.forEach { (name, value) ->
+                                    addHeader(name, value)
+                                }
+                            }
+                            .build()
 
-                            // 等待退避时间
-                            Thread.sleep(backoffPeriod) // 休眠，等待重试时间
+                        // 创建新的EventSource
+                        val newEventSource = EventSources.createFactory(okHttpClient)
+                            .newEventSource(request, createEventSourceListener(endpoint))
 
-                            // 发布重连事件
-                            eventPublisher.publishEvent(
-                                SSERetryEvent(
-                                    source = eventSource,
-                                    endpoint = endpoint,
-                                    retryCount = retryCount // 发布重试事件
-                                )
-                            )
-
-                            // 等待一段时间，确保旧连接完全关闭
-                            Thread.sleep(1000) // 休眠，确保旧连接关闭
-
-                            // 创建新的EventSource
-                            val request = Request.Builder()
-                                .url(endpoint) // 设置请求URL
-                                .header("Accept", "text/event-stream") // 设置请求头
-                                .build()
-
-                            val newEventSource = EventSources.createFactory(okHttpClient)
-                                .newEventSource(request, createListener(endpoint)) // 创建新的EventSource
-
-                            eventSources[endpoint] = newEventSource // 存储新的EventSource
-                        }
-                    } catch (e: Exception) {
-                        handleFinalFailure(eventSource, endpoint, e) // 处理最终失败
+                        eventSources[endpoint] = newEventSource
                     }
-                }
-                return
+                })
+            } catch (e: Exception) {
+                logger.error("SSE重连失败 - 端点: {}, 错误: {}", endpoint, e.message)
+                connectionManager.updateState(endpoint, ConnectionStateType.FAILED)
+                publishConnectionStateEvent(
+                    eventSource = eventSource,
+                    state = ConnectionStateType.FAILED,
+                    endpoint = endpoint,
+                    message = "SSE重连失败: ${e.message}"
+                )
             }
         }
-
-        handleFinalFailure(eventSource, endpoint, error) // 处理最终失败
     }
 
     /**
@@ -254,7 +262,7 @@ class ConnectionStateHandler(
      * @param endpoint 连接的目标端点，表示SSE连接的地址
      * @return 返回一个EventSourceListener，用于处理事件
      */
-    private fun createListener(endpoint: String): EventSourceListener {
+    private fun createEventSourceListener(endpoint: String): EventSourceListener {
         return object : EventSourceListener() {
             override fun onOpen(eventSource: EventSource, response: Response) {
                 handleConnectionOpen(eventSource, response, endpoint) // 处理连接建立事件
@@ -276,25 +284,6 @@ class ConnectionStateHandler(
                 handleConnectionFailure(eventSource, endpoint, t) // 处理连接失败事件
             }
         }
-    }
-
-    /**
-     * 处理最终失败状态
-     *
-     * @param eventSource SSE事件源，表示失败的SSE连接
-     * @param endpoint 连接的目标端点，表示SSE连接的地址
-     * @param error 可选的错误信息，表示连接失败的原因
-     */
-    private fun handleFinalFailure(eventSource: EventSource, endpoint: String, error: Throwable?) {
-        eventSources.remove(endpoint) // 移除失败的连接
-        connectionManager.updateState(endpoint, ConnectionStateType.FAILED) // 更新状态为失败
-        publishConnectionStateEvent(
-            eventSource = eventSource,
-            state = ConnectionStateType.FAILED,
-            endpoint = endpoint,
-            message = "SSE连接失败且无法恢复", // 发布连接失败事件
-            error = error // 附带错误信息
-        )
     }
 
     /**
