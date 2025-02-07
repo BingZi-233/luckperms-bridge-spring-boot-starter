@@ -82,18 +82,4 @@ interface EventApi {
     @Headers("Accept: text/event-stream")
     @Streaming
     fun subscribePreSyncEvents(): Call<ResponseBody>
-
-    /**
-     * 订阅自定义消息事件
-     * 
-     * 使用此方法，客户端可以订阅自定义消息事件，以接收特定的消息通知。
-     * 使用SSE(Server-Sent Events)接收事件。
-     * 
-     * @return 返回一个Call对象，表示事件流，类型为ResponseBody。
-     * 该流包含服务器推送的自定义消息事件数据。
-     */
-    @GET("/event/custom-message-receive")
-    @Headers("Accept: text/event-stream")
-    @Streaming
-    fun subscribeCustomMessageReceiveEvents(): Call<ResponseBody>
 } 

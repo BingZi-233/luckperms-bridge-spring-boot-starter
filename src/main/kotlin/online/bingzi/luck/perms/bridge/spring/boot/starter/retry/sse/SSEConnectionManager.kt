@@ -19,6 +19,8 @@ class SSEConnectionManager {
     private val log = LoggerFactory.getLogger(SSEConnectionManager::class.java)
     // 存储所有连接信息的线程安全哈希表
     private val connections: ConcurrentHashMap<String, ConnectionInfo> = ConcurrentHashMap()
+    // 最大重试次数
+    private val maxRetryAttempts = 6
 
     /**
      * 获取或创建连接信息
@@ -41,9 +43,23 @@ class SSEConnectionManager {
     fun updateState(endpoint: String, newState: ConnectionStateType) {
         val connectionInfo = getOrCreateConnectionInfo(endpoint)
         
-        // 如果新状态是CONNECTED，先重置重试计数再更新状态
+        // 如果新状态是CONNECTED，重置重试计数
         if (newState == ConnectionStateType.CONNECTED) {
             connectionInfo.resetRetryCount()
+            connectionInfo.updateState(newState, endpoint)
+            return
+        }
+        
+        // 如果是重试状态，增加重试计数并检查是否超过最大值
+        if (newState == ConnectionStateType.RETRYING) {
+            val currentRetryCount = connectionInfo.retryCount.incrementAndGet()
+            log.info("SSE连接准备重试 - 订阅端点: {}, 第{}次尝试", endpoint, currentRetryCount)
+            
+            if (currentRetryCount > maxRetryAttempts) {
+                log.error("SSE连接重试次数超过最大值 - 订阅端点: {}, 重试次数: {}", endpoint, currentRetryCount)
+                connectionInfo.updateState(ConnectionStateType.FAILED, endpoint)
+                return
+            }
         }
         
         // 更新状态
@@ -141,8 +157,7 @@ class SSEConnectionManager {
                         lastSuccessTime.set(currentTime)
                         lastResponseTime.set(currentTime)
                         if (oldState != ConnectionStateType.CONNECTED) {
-                            log.info("SSE连接已建立 - 订阅端点: {}, 重试次数: {}", 
-                                endpoint, retryCount.get())
+                            log.info("SSE连接已建立 - 订阅端点: {}, 重试次数已重置", endpoint)
                         }
                     }
                     ConnectionStateType.DISCONNECTED -> {
@@ -156,10 +171,9 @@ class SSEConnectionManager {
                         log.info("正在建立SSE连接 - 订阅端点: {}", endpoint)
                     }
                     ConnectionStateType.RETRYING -> {
-                        // 只有在非重试状态转换到重试状态时才增加重试计数
                         if (oldState != ConnectionStateType.RETRYING) {
-                            retryCount.incrementAndGet()
-                            log.info("正在重试SSE连接 - 订阅端点: {}, 第{}次尝试", endpoint, retryCount.get())
+                            log.info("SSE连接进入重试状态 - 订阅端点: {}, 当前重试次数: {}", 
+                                endpoint, retryCount.get())
                         }
                     }
                     ConnectionStateType.SUSPENDED -> {

@@ -73,7 +73,6 @@ class EventManager(
             eventApi.subscribePostNetworkSyncEvents(),
             eventApi.subscribePreSyncEvents(),
             eventApi.subscribePostSyncEvents(),
-            eventApi.subscribeCustomMessageReceiveEvents()
         ).map { it.request() } // 转换为请求列表
 
         // 遍历每个请求并进行订阅
