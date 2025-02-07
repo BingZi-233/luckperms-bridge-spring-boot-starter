@@ -17,26 +17,25 @@ import kotlin.math.pow
  * 该类实现了RetryStrategy接口，提供针对SSE（Server-Sent Events）连接的重试机制。
  * 主要通过配置最大重试次数、初始间隔、乘数和最大间隔来控制重试行为。
  *
- * @param maxAttempts 最大重试次数，默认为10次
- * @param initialInterval 初始重试间隔（单位：毫秒），默认为2000毫秒
- * @param multiplier 间隔时间的乘数，默认为1.5
- * @param maxInterval 最大重试间隔（单位：毫秒），默认为60000毫秒
+ * @param maxAttempts 最大重试次数，默认为6次
+ * @param initialInterval 初始重试间隔（单位：毫秒），默认为1500毫秒
+ * @param multiplier 间隔时间的乘数，默认为1.8
+ * @param maxInterval 最大重试间隔（单位：毫秒），默认为45000毫秒
  */
 class SSERetryStrategy(
-    private val maxAttempts: Int = 10,
-    private val initialInterval: Long = 2000,
-    private val multiplier: Double = 1.5,
-    private val maxInterval: Long = 60000
+    private val maxAttempts: Int = 6,
+    private val initialInterval: Long = 1500,
+    private val multiplier: Double = 1.8,
+    private val maxInterval: Long = 45000
 ) : RetryStrategy {
 
     // 定义SSE连接相关的可重试异常
     private val retryableExceptions: Map<Class<out Throwable>, Boolean> = mapOf(
-        IOException::class.java to true,
-        SocketException::class.java to true,
-        SocketTimeoutException::class.java to true,
-        SSLException::class.java to true,
-        ConnectException::class.java to true,
-        RuntimeException::class.java to true // 添加RuntimeException作为可重试异常
+        IOException::class.java to true,           // IO异常（网络、文件等）
+        SocketException::class.java to true,       // 套接字异常
+        SocketTimeoutException::class.java to true, // 套接字超时
+        SSLException::class.java to true,          // SSL/TLS异常
+        ConnectException::class.java to true       // 连接异常
     )
 
     /**
@@ -48,15 +47,20 @@ class SSERetryStrategy(
 
     /**
      * 计算基于重试次数的退避时间
+     * 使用指数退避算法，但增加了随机因子以避免多个客户端同时重试
      * 
      * @param retryCount 当前的重试次数
      * @return 返回计算得到的退避时间（单位：毫秒）
      */
     override fun getBackoffPeriod(retryCount: Int): Long {
-        // 计算下一个重试间隔，使用指数退避算法
-        val interval = initialInterval * multiplier.pow(retryCount.toDouble())
+        // 计算基础间隔
+        val baseInterval = initialInterval * multiplier.pow(retryCount.toDouble())
+        // 添加随机因子 (±20%)
+        val randomFactor = 0.8 + Math.random() * 0.4
+        // 计算最终间隔时间
+        val interval = (baseInterval * randomFactor).toLong()
         // 限制最大间隔时间
-        return interval.toLong().coerceAtMost(maxInterval)
+        return interval.coerceAtMost(maxInterval)
     }
 
     /**
@@ -66,13 +70,18 @@ class SSERetryStrategy(
      * @return 如果应该重试返回true，否则返回false
      */
     override fun shouldRetry(exception: Throwable?): Boolean {
-        // 如果异常为null（表示正常关闭），也应该进行重试
+        // 如果异常为null（表示正常关闭），不进行重试
         if (exception == null) {
-            return true
+            return false
         }
-        // 检查是否是可重试的异常
-        return retryableExceptions[exception::class.java] ?: 
-               retryableExceptions[exception.cause?.javaClass] ?: false
+        
+        // 检查异常类型是否可重试
+        val shouldRetry = retryableExceptions[exception::class.java] ?: false
+        // 如果当前异常不可重试，检查cause
+        if (!shouldRetry && exception.cause != null) {
+            return retryableExceptions[exception.cause?.javaClass] ?: false
+        }
+        return shouldRetry
     }
 
     /**

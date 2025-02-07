@@ -40,12 +40,14 @@ class SSEConnectionManager {
      */
     fun updateState(endpoint: String, newState: ConnectionStateType) {
         val connectionInfo = getOrCreateConnectionInfo(endpoint)
-        connectionInfo.updateState(newState, endpoint)
         
-        // 如果连接成功，重置重试计数
+        // 如果新状态是CONNECTED，先重置重试计数再更新状态
         if (newState == ConnectionStateType.CONNECTED) {
             connectionInfo.resetRetryCount()
         }
+        
+        // 更新状态
+        connectionInfo.updateState(newState, endpoint)
     }
 
     /**
@@ -144,7 +146,7 @@ class SSEConnectionManager {
                         }
                     }
                     ConnectionStateType.DISCONNECTED -> {
-                        lastFailureTime.set(currentTime)
+                        lastDisconnectTime.set(currentTime)
                         if (oldState != ConnectionStateType.DISCONNECTED) {
                             log.warn("SSE连接已断开 - 订阅端点: {}, 重试次数: {}", 
                                 endpoint, retryCount.get())
@@ -154,8 +156,11 @@ class SSEConnectionManager {
                         log.info("正在建立SSE连接 - 订阅端点: {}", endpoint)
                     }
                     ConnectionStateType.RETRYING -> {
-                        retryCount.incrementAndGet()
-                        log.info("正在重试SSE连接 - 订阅端点: {}, 第{}次尝试", endpoint, retryCount.get())
+                        // 只有在非重试状态转换到重试状态时才增加重试计数
+                        if (oldState != ConnectionStateType.RETRYING) {
+                            retryCount.incrementAndGet()
+                            log.info("正在重试SSE连接 - 订阅端点: {}, 第{}次尝试", endpoint, retryCount.get())
+                        }
                     }
                     ConnectionStateType.SUSPENDED -> {
                         lastFailureTime.set(currentTime)
