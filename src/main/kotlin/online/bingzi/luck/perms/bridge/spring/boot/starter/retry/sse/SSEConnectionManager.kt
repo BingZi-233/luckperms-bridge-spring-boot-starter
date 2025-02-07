@@ -41,6 +41,11 @@ class SSEConnectionManager {
     fun updateState(endpoint: String, newState: ConnectionStateType) {
         val connectionInfo = getOrCreateConnectionInfo(endpoint)
         connectionInfo.updateState(newState, endpoint)
+        
+        // 如果连接成功，重置重试计数
+        if (newState == ConnectionStateType.CONNECTED) {
+            connectionInfo.resetRetryCount()
+        }
     }
 
     /**
@@ -75,9 +80,9 @@ class SSEConnectionManager {
 
     /**
      * 获取所有连接的统计信息
-     * 返回一个包含所有连接的统计信息的映射
+     * 返回所有端点的连接统计信息
      * 
-     * @return 所有连接的统计信息，类型为Map<String, ConnectionStats>
+     * @return 包含所有连接统计信息的Map，键为端点，值为统计信息
      */
     fun getAllConnectionStats(): Map<String, ConnectionStats> =
         connections.mapValues { it.value.getStats() }
@@ -173,6 +178,13 @@ class SSEConnectionManager {
         }
 
         /**
+         * 重置重试计数
+         */
+        fun resetRetryCount() {
+            retryCount.set(0)
+        }
+
+        /**
          * 获取连接的统计信息
          * 返回当前连接的状态和统计数据
          * 
@@ -181,7 +193,9 @@ class SSEConnectionManager {
         fun getStats(): ConnectionStats = ConnectionStats(
             currentState = currentState.get(),
             retryCount = retryCount.get(),
-            lastResponseTime = lastResponseTime.get()
+            lastResponseTime = lastResponseTime.get(),
+            lastSuccessTime = lastSuccessTime.get(),
+            lastFailureTime = lastFailureTime.get()
         )
     }
 }

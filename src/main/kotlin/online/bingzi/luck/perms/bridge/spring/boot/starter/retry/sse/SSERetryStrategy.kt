@@ -17,26 +17,26 @@ import kotlin.math.pow
  * 该类实现了RetryStrategy接口，提供针对SSE（Server-Sent Events）连接的重试机制。
  * 主要通过配置最大重试次数、初始间隔、乘数和最大间隔来控制重试行为。
  *
- * @param maxAttempts 最大重试次数，默认为5次
- * @param initialInterval 初始重试间隔（单位：毫秒），默认为1000毫秒
- * @param multiplier 间隔时间的乘数，默认为2.0
- * @param maxInterval 最大重试间隔（单位：毫秒），默认为30000毫秒
+ * @param maxAttempts 最大重试次数，默认为10次
+ * @param initialInterval 初始重试间隔（单位：毫秒），默认为2000毫秒
+ * @param multiplier 间隔时间的乘数，默认为1.5
+ * @param maxInterval 最大重试间隔（单位：毫秒），默认为60000毫秒
  */
 class SSERetryStrategy(
-    private val maxAttempts: Int = 5,
-    private val initialInterval: Long = 1000,
-    private val multiplier: Double = 2.0,
-    private val maxInterval: Long = 30000
+    private val maxAttempts: Int = 10,
+    private val initialInterval: Long = 2000,
+    private val multiplier: Double = 1.5,
+    private val maxInterval: Long = 60000
 ) : RetryStrategy {
 
     // 定义SSE连接相关的可重试异常
-    // 这些异常将会触发重试机制
     private val retryableExceptions: Map<Class<out Throwable>, Boolean> = mapOf(
         IOException::class.java to true,
         SocketException::class.java to true,
         SocketTimeoutException::class.java to true,
         SSLException::class.java to true,
-        ConnectException::class.java to true
+        ConnectException::class.java to true,
+        RuntimeException::class.java to true // 添加RuntimeException作为可重试异常
     )
 
     /**
@@ -70,8 +70,9 @@ class SSERetryStrategy(
         if (exception == null) {
             return true
         }
-        // 检查是否是可重试的异常，如果是则返回true
-        return retryableExceptions[exception::class.java] ?: false
+        // 检查是否是可重试的异常
+        return retryableExceptions[exception::class.java] ?: 
+               retryableExceptions[exception.cause?.javaClass] ?: false
     }
 
     /**
