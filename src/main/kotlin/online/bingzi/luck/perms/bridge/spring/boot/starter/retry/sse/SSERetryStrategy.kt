@@ -30,13 +30,13 @@ class SSERetryStrategy(
 ) : RetryStrategy {
 
     // 定义SSE连接相关的可重试异常
-    private val retryableExceptions: Map<Class<out Throwable>, Boolean> = mapOf<Class<out Throwable>, Boolean>(
-        IOException::class.java to true,           // IO异常（网络、文件等）
-        SocketException::class.java to true,       // 套接字异常
-        SocketTimeoutException::class.java to true, // 套接字超时
-        SSLException::class.java to true,          // SSL/TLS异常
-        ConnectException::class.java to true       // 连接异常
-    )
+    private val retryableExceptions: Map<Class<out Throwable>, Boolean> = mutableMapOf<Class<out Throwable>, Boolean>().also {
+        it[IOException::class.java] = true           // IO异常（网络、文件等）
+        it[SocketException::class.java] = true       // 套接字异常
+        it[SocketTimeoutException::class.java] = true // 套接字超时
+        it[SSLException::class.java] = true          // SSL/TLS异常
+        it[ConnectException::class.java] = true      // 连接异常
+    }
 
     /**
      * 获取最大重试次数
@@ -79,7 +79,10 @@ class SSERetryStrategy(
         val shouldRetry = retryableExceptions[exception::class.java] ?: false
         // 如果当前异常不可重试，检查cause
         if (!shouldRetry && exception.cause != null) {
-            return retryableExceptions[exception.cause?.javaClass] ?: false
+            val cause = exception.cause
+            if (cause != null) {
+                return retryableExceptions[cause.javaClass] ?: false
+            }
         }
         return shouldRetry
     }
