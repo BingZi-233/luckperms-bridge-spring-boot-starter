@@ -18,7 +18,7 @@ class SSEConnectionManager {
     // 日志记录器，用于记录SSE连接的状态
     private val log = LoggerFactory.getLogger(SSEConnectionManager::class.java)
     // 存储所有连接信息的线程安全哈希表
-    private val connections = ConcurrentHashMap<String, ConnectionInfo>()
+    private val connections: ConcurrentHashMap<String, ConnectionInfo> = ConcurrentHashMap()
 
     /**
      * 获取或创建连接信息
@@ -28,7 +28,7 @@ class SSEConnectionManager {
      * @return 连接信息
      */
     private fun getOrCreateConnectionInfo(endpoint: String): ConnectionInfo {
-        return connections.computeIfAbsent(endpoint) { ConnectionInfo() }
+        return connections.computeIfAbsent(endpoint) { _ -> ConnectionInfo() }
     }
 
     /**
