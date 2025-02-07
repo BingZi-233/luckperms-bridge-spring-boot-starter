@@ -30,7 +30,7 @@ class SSERetryStrategy(
 ) : RetryStrategy {
 
     // 定义SSE连接相关的可重试异常
-    private val retryableExceptions: Map<Class<out Throwable>, Boolean> = mapOf(
+    private val retryableExceptions: Map<Class<out Throwable>, Boolean> = mapOf<Class<out Throwable>, Boolean>(
         IOException::class.java to true,           // IO异常（网络、文件等）
         SocketException::class.java to true,       // 套接字异常
         SocketTimeoutException::class.java to true, // 套接字超时

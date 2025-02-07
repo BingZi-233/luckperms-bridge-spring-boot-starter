@@ -198,9 +198,7 @@ class SSEConnectionManager {
         fun getStats(): ConnectionStats = ConnectionStats(
             currentState = currentState.get(),
             retryCount = retryCount.get(),
-            lastResponseTime = lastResponseTime.get(),
-            lastSuccessTime = lastSuccessTime.get(),
-            lastFailureTime = lastFailureTime.get()
+            lastResponseTime = lastResponseTime.get()
         )
     }
 }
