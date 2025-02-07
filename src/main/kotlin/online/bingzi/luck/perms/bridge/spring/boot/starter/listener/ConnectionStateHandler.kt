@@ -225,6 +225,20 @@ class ConnectionStateHandler(
                         connectionManager.updateState(endpoint, ConnectionStateType.RETRYING)
                         eventPublisher.publishEvent(SSERetryEvent(eventSource, endpoint, connectionManager.getRetryCount(endpoint)))
 
+                        // 在创建新连接前，先关闭旧的连接
+                        eventSources[endpoint]?.cancel()
+                        eventSources.remove(endpoint)
+
+                        // 计算当前重试次数的退避时间
+                        val retryCount = context.retryCount
+                        val backoffPeriod = retryStrategy.getBackoffPeriod(retryCount)
+                        
+                        // 记录重试信息
+                        logger.info("SSE连接准备第{}次重试 - 端点: {}, 等待时间: {}ms", retryCount + 1, endpoint, backoffPeriod)
+                        
+                        // 等待退避时间
+                        Thread.sleep(backoffPeriod)
+
                         // 创建新的请求，并添加之前保存的认证头
                         val savedHeaders = getSavedHeaders(endpoint)
                         val request = Request.Builder()

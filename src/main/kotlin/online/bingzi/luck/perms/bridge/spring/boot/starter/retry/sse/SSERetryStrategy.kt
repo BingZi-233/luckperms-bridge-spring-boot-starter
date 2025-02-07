@@ -83,18 +83,18 @@ class SSERetryStrategy(
         // 创建一个新的RetryTemplate实例
         val retryTemplate = RetryTemplate()
         
-        // 设置重试策略
+        // 设置重试策略，包含可重试的异常
         val retryPolicy: RetryPolicy = SimpleRetryPolicy(maxAttempts, retryableExceptions)
         retryTemplate.setRetryPolicy(retryPolicy)
         
         // 设置退避策略为指数退避
-        val backOffPolicy = ExponentialBackOffPolicy()
-        backOffPolicy.initialInterval = initialInterval // 设置初始间隔
-        backOffPolicy.multiplier = multiplier // 设置乘数
-        backOffPolicy.maxInterval = maxInterval // 设置最大间隔
+        val backOffPolicy = ExponentialBackOffPolicy().apply {
+            initialInterval = this@SSERetryStrategy.initialInterval
+            multiplier = this@SSERetryStrategy.multiplier
+            maxInterval = this@SSERetryStrategy.maxInterval
+        }
         retryTemplate.setBackOffPolicy(backOffPolicy)
         
-        // 返回配置完成的RetryTemplate
         return retryTemplate
     }
 }

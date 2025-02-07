@@ -29,8 +29,6 @@ class SSEHealthController(
                 endpoint = endpoint, // 连接的端点
                 state = stats.currentState, // 当前连接状态
                 retryCount = stats.retryCount, // 重试次数
-                uptime = stats.uptime, // 正常运行时间
-                downtime = stats.downtime, // 停机时间
                 lastResponseTime = stats.lastResponseTime // 最后响应时间
             )
         }
@@ -39,7 +37,7 @@ class SSEHealthController(
     /**
      * 获取SSE连接的健康状态摘要
      *
-     * @return 健康状态摘要信息，包括总连接数、活跃连接数、总重试次数、总正常运行时间、总停机时间等
+     * @return 健康状态摘要信息，包括总连接数、活跃连接数、总重试次数等
      */
     @GetMapping("/summary") // 处理GET请求，路径为/api/v1/sse/health/summary
     fun getConnectionHealthSummary(): Map<String, Any> {
@@ -49,16 +47,12 @@ class SSEHealthController(
         // 计算当前活跃连接数
         val activeConnections = stats.count { it.value.currentState.isConnected() }
         val totalRetries = stats.values.sumOf { it.retryCount } // 计算总重试次数
-        val totalUptime = stats.values.maxOfOrNull { it.uptime } ?: 0 // 计算总正常运行时间
-        val totalDowntime = stats.values.sumOf { it.downtime } // 计算总停机时间
         
         // 返回健康状态摘要信息的映射
         return mapOf(
             "totalConnections" to totalConnections, // 总连接数
             "activeConnections" to activeConnections, // 活跃连接数
             "totalRetries" to totalRetries, // 总重试次数
-            "totalUptime" to totalUptime, // 总正常运行时间
-            "totalDowntime" to totalDowntime, // 总停机时间
             "healthScore" to calculateHealthScore(activeConnections, totalConnections, totalRetries) // 健康分数
         )
     }

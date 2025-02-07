@@ -108,12 +108,10 @@ class SSEConnectionManager {
         val lastFailureTime = AtomicLong(0)
         // 最后响应的时间，使用AtomicLong以支持线程安全的更新
         val lastResponseTime = AtomicLong(0)
-        // 连接开始时间，使用AtomicLong以支持线程安全的更新
-        val startTime = AtomicLong(System.currentTimeMillis())
-        // 总停机时间，使用AtomicLong以支持线程安全的更新
-        val totalDowntime = AtomicLong(0)
         // 最后状态变化时间，使用AtomicLong以支持线程安全的更新
         val lastStateChangeTime = AtomicLong(System.currentTimeMillis())
+        // 上一次断开连接的时间，使用AtomicLong以支持线程安全的更新
+        val lastDisconnectTime = AtomicLong(0)
 
         /**
          * 更新连接状态
@@ -127,31 +125,24 @@ class SSEConnectionManager {
             // 尝试更新状态，如果成功则执行后续逻辑
             if (currentState.compareAndSet(oldState, newState)) {
                 val currentTime = System.currentTimeMillis()
-                val stateChangeDuration = currentTime - lastStateChangeTime.get()
-                
-                // 更新累计停机时间
-                if (oldState in listOf(ConnectionStateType.DISCONNECTED, ConnectionStateType.FAILED, ConnectionStateType.SUSPENDED)) {
-                    totalDowntime.addAndGet(stateChangeDuration)
-                }
                 
                 // 更新最后状态变化时间为当前时间
                 lastStateChangeTime.set(currentTime)
                 
-                // 根据新的状态执行相应的日志记录
                 when (newState) {
                     ConnectionStateType.CONNECTED -> {
                         lastSuccessTime.set(currentTime)
                         lastResponseTime.set(currentTime)
                         if (oldState != ConnectionStateType.CONNECTED) {
-                            log.info("SSE连接已建立 - 订阅端点: {}, 重试次数: {}, 累计运行时间: {}ms, 累计停机时间: {}ms", 
-                                endpoint, retryCount.get(), calculateUptime(), calculateDowntime())
+                            log.info("SSE连接已建立 - 订阅端点: {}, 重试次数: {}", 
+                                endpoint, retryCount.get())
                         }
                     }
                     ConnectionStateType.DISCONNECTED -> {
                         lastFailureTime.set(currentTime)
                         if (oldState != ConnectionStateType.DISCONNECTED) {
-                            log.warn("SSE连接已断开 - 订阅端点: {}, 重试次数: {}, 累计停机时间: {}ms", 
-                                endpoint, retryCount.get(), calculateDowntime())
+                            log.warn("SSE连接已断开 - 订阅端点: {}, 重试次数: {}", 
+                                endpoint, retryCount.get())
                         }
                     }
                     ConnectionStateType.CONNECTING -> {
@@ -163,50 +154,22 @@ class SSEConnectionManager {
                     }
                     ConnectionStateType.SUSPENDED -> {
                         lastFailureTime.set(currentTime)
-                        log.info("SSE连接已暂停 - 订阅端点: {}, 累计运行时间: {}ms, 累计停机时间: {}ms", 
-                            endpoint, calculateUptime(), calculateDowntime())
+                        log.info("SSE连接已暂停 - 订阅端点: {}", endpoint)
                     }
                     ConnectionStateType.FAILED -> {
                         lastFailureTime.set(currentTime)
-                        log.error("SSE连接已失败 - 订阅端点: {}, 重试次数: {}, 累计停机时间: {}ms", 
-                            endpoint, retryCount.get(), calculateDowntime())
+                        log.error("SSE连接已失败 - 订阅端点: {}, 重试次数: {}", 
+                            endpoint, retryCount.get())
                     }
                     ConnectionStateType.CLOSED -> {
                         lastFailureTime.set(currentTime)
-                        log.info("SSE连接已关闭 - 订阅端点: {}, 累计运行时间: {}ms, 累计停机时间: {}ms", 
-                            endpoint, calculateUptime(), calculateDowntime())
+                        log.info("SSE连接已关闭 - 订阅端点: {}", endpoint)
                     }
                     ConnectionStateType.UNKNOWN -> {
                         log.warn("SSE连接状态未知 - 订阅端点: {}, 重试次数: {}", endpoint, retryCount.get())
                     }
                 }
             }
-        }
-
-        /**
-         * 计算总运行时间
-         * 
-         * @return 连接的累计运行时间，类型为Long
-         */
-        fun calculateUptime(): Long {
-            val totalTime = System.currentTimeMillis() - startTime.get()
-            return totalTime - calculateDowntime()
-        }
-
-        /**
-         * 计算总停机时间
-         * 
-         * @return 连接的累计停机时间，类型为Long
-         */
-        fun calculateDowntime(): Long {
-            var downtime = totalDowntime.get()
-            
-            // 如果当前状态是断开状态，加上当前的断开时长
-            if (currentState.get() in listOf(ConnectionStateType.DISCONNECTED, ConnectionStateType.FAILED, ConnectionStateType.SUSPENDED)) {
-                downtime += System.currentTimeMillis() - lastStateChangeTime.get()
-            }
-            
-            return downtime
         }
 
         /**
@@ -218,8 +181,6 @@ class SSEConnectionManager {
         fun getStats(): ConnectionStats = ConnectionStats(
             currentState = currentState.get(),
             retryCount = retryCount.get(),
-            uptime = calculateUptime(),
-            downtime = calculateDowntime(),
             lastResponseTime = lastResponseTime.get()
         )
     }
